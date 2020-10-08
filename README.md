@@ -94,4 +94,50 @@ Django nace en 2004 para crear y mantener sitios muy grandes, URLs bien diseñad
 
 - Django tiene el concepto **(DRY(Don't Repeat Yourself))**, donde dice que si estas copiando y pegando algo en tu codigo, seguramente estas haciendo algo mal
 
-Dejamos dos lecturas: Preparación del entorno en Windows y Linux.
+## Clase 3 Preparación del entorno de trabajo en Windows y Linux
+
+**Instalación de Python en Windows**
+
+___
+
+1. Dirigirse a https://python.org
+
+2. Ir a la sección de descargas
+
+3. Descargar cualquier versión superior a 3.6.*
+
+**Instalación de Python en Linux**
+___
+
+1. Correr:
+```
+sudo add-apt-repository -y ppa:jonathonf/python-3
+sudo apt-get update -y
+sudo apt-get install -y python3
+sudo apt-get install -y python3-dev
+sudo apt-get install -y python3-distutils
+sudo apt-get install python3-pip
+sudo apt-get install python3-venv
+sudo apt install python3-virtualenv
+
+```
+
+## Verificación de la descarga
+
+1. Correr `python3 --version`
+
+2. Correr `pip3 --version`
+
+## Entorno virtual
+
+1. Correr `python3 -m venv env` donde `env` sea el nombre deseado
+
+2. Correr `source env/bin/activate` para activar el entorno
+
+3. Correr `deactivate` para desactivar el entorno
+
+## Instalación de django
+
+1. Activar entorno virtual
+
+2. Correr `pip install django -U`
