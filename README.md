@@ -1,1 +1,1 @@
-# Proyecto-Platzigram--Django
+# Proyecto Platzigram Django
