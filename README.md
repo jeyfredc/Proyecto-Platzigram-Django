@@ -406,3 +406,168 @@ urlpatterns = [
 Ahora en el navegado pordemos ir a la direccion http://127.0.0.1:8000/hello-world y desplegar el primer hola mundo 
 
 ![assets/3.png](assets/3.png)
+
+## Clase 5 El objeto Request
+
+En esta clase crearemos mas vistas, jugaremos con los diferentes patrones de urls que django nos permite tener, revisaremos cómo django procesa las peticiones.
+
+Lo primero que hay que hacer es revisar la documentacion de [django](https://docs.djangoproject.com/en/3.1/topics/http/urls/), para revisar como funciona el **dispatcher** de urls. la documentacion se encuentra en ingles pero hay un paso a paso que indica como procesa sjango una solicitud
+
+**Cómo procesa Django una solicitud**
+
+Cuando un usuario solicita una página de su sitio con tecnología Django, este es el algoritmo que sigue el sistema para determinar qué código Python ejecutar:
+
+1. Django determina el módulo raíz URLconf que se utilizará. Por lo general, este es el valor de la **ROOT_URLCONF** configuración, pero si el **HttpRequest** objeto entrante tiene un **urlconf** atributo (establecido por middleware), su valor se utilizará en lugar de la **ROOT_URLCONF** configuración que se encuentra en settings.
+
+2. Django carga ese módulo de Python y busca la variable **urlpatterns**. Esta debería ser una lista de Python **django.urls.path()** y / o **django.urls.re_path()** instancias.
+
+3. Django recorre cada patrón de URL, en orden, y se detiene en el primero que coincide con la URL solicitada.
+
+4. Una vez que uno de los patrones de URL coincide, Django importa y llama a la vista dada, que es una función de Python simple (o una vista basada en clases ). La vista recibe los siguientes argumentos:
+
+- Una instancia de **HttpRequest**.
+
+- Si el patrón de URL coincidente no devolvió ningún grupo con nombre, las coincidencias de la expresión regular se proporcionan como argumentos posicionales.
+
+- Los argumentos de la palabra clave se componen de cualquier parte nombrada que coincida con la expresión de la ruta, anulada por cualquier argumento especificado en el **kwargs** argumento opcional para **django.urls.path()** o **django.urls.re_path().**
+
+5. Si ningún patrón de URL coincide, o si se genera una excepción durante cualquier punto de este proceso, Django invoca una vista de manejo de errores adecuada. Consulte Manejo de errores a continuación.
+
+Ahora lo que se va a hacer es crear un archivo para manejar las vistas dentro de la carpeta platzigram que se va a llamar **views.py** y alli se va a agregar la vista que habiamos creado en la clase anterior y la quitamos de urls.py
+
+```
+""" Platzigram views """
+
+from django.http import HttpResponse
+
+
+def hello_world(request):
+    """ Return a greeting """
+    return HttpResponse('Hello, world!')
+```
+
+y ahora importarla en **urls.py** para que siga funcionando la vista
+
+```
+from django.urls import path
+
+from platzigram import views
+
+
+urlpatterns = [
+
+    path('hello-world/', views.hello_world)
+
+
+]
+```
+
+por el momento nada ha cambiado y la vista que habiamos visto antes en http://127.0.0.1:8000/hello-world sigue cargando como lo hizo anteriormente
+
+![assets/3.png](assets/3.png)
+
+Ahora en el archivo **views** utilizamos un modulo que se va a requerir para utilizar la hora del servidor que se llama datetime que realmente es una utilidad de Python `from datetime import datetime`, cambiamos el `Hello, world!` y le pasamos otro argumento con la ahora actual para verla en el navegador
+
+```
+""" Platzigram views """
+
+# Django
+from django.http import HttpResponse
+
+# utilities
+from datetime import datetime
+
+def hello_world(request):
+    """ Return a greeting """
+    now = datetime.now()
+    return HttpResponse('Oh, hi! current time is {now}'.format(now=str(now)))
+```
+
+![assets/4.png](assets/4.png)
+
+para mejorar la vista del formato de la hora se puede agregar a la variable now lo siguiente `now = datetime.now().strftime('%b %dth, %Y - %H:%M hrs')` donde `%b` indica el mes `%dth,` es dia `%Y` es el año `%H:%M hrs` indica la hora y minutos y al pasar el formato ya no es necesario convertirlo a un string por tanto la respuesta queda asi `return HttpResponse('Oh, hi! current time is {now}'.format(now=now))` o la otra forma para escribirlo seria la siguiente
+
+```
+""" Platzigram views """
+
+# Django
+from django.http import HttpResponse
+
+# utilities
+from datetime import datetime
+
+def hello_world(request):
+    """ Return a greeting """
+    return HttpResponse('Oh, hi! current time is {now}'.format(
+        now= datetime.now().strftime('%b %dth, %Y - %H:%M hrs')
+        ))
+```
+
+![assets/5.png](assets/5.png)
+
+Hasta el momento no se ha hecho nada con el objeto request por tanto se va a crear otra vista despues de hello_world para ver que sucede con el objeto
+
+```
+def hi(request):
+    """ Hi """
+    return HttpResponse('Hi!')
+```
+
+y ahora se debe ligar a una url en el archivo **urls.py**
+
+```
+from django.urls import path
+
+from platzigram import views
+
+
+urlpatterns = [
+
+    path('hello-world/', views.hello_world),
+    path('hi/', views.hi)
+
+]
+```
+
+![assets/6.png](assets/6.png)
+
+Para ver que esta pasando con request simplemente podemos hacer la impresion de este objeto con `print(request)`
+
+```
+def hi(request):
+    """ Hi """
+    print(request)
+    return HttpResponse('Hi!')
+```
+Donde esta imprimiendo el objeto es en la terminal que indica que es un objeto de WSGIRequest que es un metodo GET y la url
+
+`<WSGIRequest: GET '/hi/'>`
+
+los atributos del objeto **HttpRequest** los encuentras [aqui](https://docs.djangoproject.com/en/3.1/ref/request-response/#django.http.HttpRequest)
+
+la desventaja de la funcion `print()` es que se tiene que usar una y otra vez donde se quiera ver que esta pasando con el objeto. Existe una utilidad de Python que se llama **pdb** el cual es un debugger de Python que se llama asi `import pdb; pdb.set_trace()` el **;** es para no utilizar otra linea, esto se reemplaza en la funcion `print(request)`
+
+para usarlo debemos recarga la direccion http://127.0.0.1:8000/hi/, esta se va a quedar cargando y luego en la terminal podemos hacer uso de pdb
+
+![assets/7.png](assets/7.png)
+
+y asi es como podemos tener acceso a todos los metodos de request
+
+![assets/8.png](assets/8.png)
+
+para salir de este debug podemos presionar la tecla **c + Enter** en la terminal y para finalizar o detener el servidor con **ctrl + c**
+
+ahora en la funcion vamos a pasar una lista de numeros de la siguiente forma
+
+```
+def hi(request):
+    """ Hi """
+    numbers = request.GET['numbers']
+    return HttpResponse(str(numbers))
+ ```
+
+ y en el navegador pasamos lo siguiente http://127.0.0.1:8000/hi/?numbers=10,4,50,32 , lo cual va a traer esa lista de numeros en el navegador
+
+**Reto de la clase:** Crea una vista y su respectiva URL en la que recibas números y hagas operaciones con ellos. En la siguiente clase te voy a enseñar a resolverlo.
+
+Regresa la lista ordenada de números en formato json.
