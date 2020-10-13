@@ -571,3 +571,198 @@ def hi(request):
 **Reto de la clase:** Crea una vista y su respectiva URL en la que recibas números y hagas operaciones con ellos. En la siguiente clase te voy a enseñar a resolverlo.
 
 Regresa la lista ordenada de números en formato json.
+
+## Clase 6 Solución al reto - Pasando argumentos en la URL
+
+Continuando con las clases a continuacion se va a solucionar el reto de la clase pasada y ver otras formas de pasar argumentos a traves de las urls
+
+para esto agregamos un debug ha la funcion `hi`
+
+```
+def hi(request):
+    """ Hi """
+    numbers = request.GET['numbers']
+    import pdb; pdb.set_trace()
+    return HttpResponse(str(numbers))
+```
+
+despues de esto utilizamos la terminal para regresar a `numbers` lo cual en un principio no trae una lista de numeros
+
+![assets/9.png](assets/9.png)
+
+pero se puede agregar un metodo para poder separar los numeros dado un caracter, el cual se llama split y lo que recibe es el caracter que lo separa que en este caso es una coma , y si hacemos split obtenemos una lista de numeros pero estos numeros realmente siguen como enteros 
+
+![assets/10.png](assets/10.png)
+
+Usando un for se puede recorrer cada uno de los caracteres y convertirlos en enteros mediante un list comprehension (Pdb) `[int(i) for i in numbers.split(',')]` esto va a regresar una lista de numeros 
+
+`[10, 4, 50, 32]`
+
+modificando nuestro codigo de la funcion hi quedaria de la siguiente forma
+
+```
+def hi(request):
+    """ Hi """
+    numbers = [int(i) for i in request.GET['numbers'].split(',')]
+    sorted_ints = sorted(numbers)
+    return HttpResponse(str(numbers), content_type='application/json')
+```    
+
+Esto nos regresara en el navegador la lista que ya conocemos 
+
+`[10, 4, 50, 32]`
+
+revisando la documentacion sobre [HttpResponse Objects](https://docs.djangoproject.com/en/3.1/ref/request-response/#httpresponse-objects)
+
+podemos encontrar el uso de content_type
+
+**HttpResponse objetos** 
+
+**clase HttpResponse**
+
+A diferencia de los **HttpRequest** objects, que son creados automáticamente por Django, los **HttpResponse** objects son tu responsabilidad. Cada vista que escriba es responsable de crear instancias, completar y devolver un **HttpResponse**.
+
+La **HttpResponse** class vive en el **django.http** module.
+
+**Uso**
+
+**Pasando cadenas**
+
+El uso típico es pasar el contenido de la página, como una cadena, una cadena de bytes o memoryview, al HttpResponseconstructor:
+
+```
+>>> from django.http import HttpResponse
+>>> response = HttpResponse("Here's the text of the Web page.")
+>>> response = HttpResponse("Text only, please.", content_type="text/plain")
+>>> response = HttpResponse(b'Bytestrings are also accepted.')
+>>> response = HttpResponse(memoryview(b'Memoryview as well.'))
+```
+___
+
+Modificando nuevamente nuestra funcion para regresarla como un objeto json podemos declarar en un diccionario e importar la libreria json para hacer uso de esta, tambien existe otra forma de implementarla a traves de [JsonResponse objects](https://docs.djangoproject.com/en/3.1/ref/request-response/#httpresponse-objects)
+
+```
+""" Platzigram views """
+
+# Django
+from django.http import HttpResponse
+
+# utilities
+from datetime import datetime
+import json
+
+def hello_world(request):
+    """ Return a greeting """
+    return HttpResponse('Oh, hi! current time is {now}'.format(
+        now= datetime.now().strftime('%b %dth, %Y - %H:%M hrs')
+        ))
+
+
+def hi(request):
+    """ Hi """
+    numbers = [int(i) for i in request.GET['numbers'].split(',')]
+    sorted_ints = sorted(numbers)
+    data = {
+        'status': 'ok',
+        'numbers': sorted_ints,
+        'message': 'Integers sorted successfuly.'
+    }
+    return HttpResponse(json.dumps(data), content_type='application/json')
+```
+
+esto en nuestro navegador nos va a regresar lo siguiente
+
+`{"status": "ok", "numbers": [4, 10, 32, 50], "message": "Integers sorted successfuly."}`
+
+y si queremos agregar indentacion para que se vea mas presentable podemos utilizarlo como parametros en dumps
+
+`return HttpResponse(json.dumps(data, indent=4), content_type='application/json')`
+
+para que el navegador lo suba de la siguiente forma 
+
+```
+{
+    "status": "ok",
+    "numbers": [
+        4,
+        10,
+        32,
+        50
+    ],
+    "message": "Integers sorted successfuly."
+}
+```
+
+Hasta aqui estaria resuelto el resto de la clase anterior, ahora lo que sigue es resolver otra manera para pasar argumentos. 
+
+En los sitios web podemos ver cosas como `http://127.0.0.1:8000/users/jeyfred` o un blog post algo como esto `http://127.0.0.1:8000/post/2020`
+
+para que django pueda realizar este tipo de cosas utiliza [Path converters](https://docs.djangoproject.com/en/3.1/topics/http/urls/).
+
+y en la documentacion se indica que puede ser una lista de paths `django.urls.path()` o una lista de repaths ` django.urls.re_path()`.
+
+Un ejemplo seria una validacion de edad indicando que Platzigram no puede ser usado por menores de 15 años, para eso dentro del archivo de **urls.py** creamos la ruta 
+
+
+from django.urls import path
+
+from platzigram import views
+
+```
+urlpatterns = [
+
+    path('hello-world/', views.hello_world),
+    path('sorted/', views.sort_integers),
+    path('hi/<str:name>/<int:age>/', views.say_hi)
+]
+```
+
+**Nota:** hay un pequeño cambio en la funcion **hi**, cambia por sort_integers por tanto en la url se vera diferente.
+
+y ahora dentro de las vistas en **views.py** implementamos la funcion `say_hi`, la documentacion indica que si en el path se pasa las variables name y age en este caso de ejemplo `path('hi/<str:name>/<int:age>/', views.say_hi`, la funcion esta obligada a pasar estos parametros `def say_hi(request, name, age):`
+
+```
+""" Platzigram views """
+
+# Django
+from django.http import HttpResponse
+
+# utilities
+from datetime import datetime
+import json
+
+def hello_world(request):
+    """ Return a greeting """
+    return HttpResponse('Oh, hi! current time is {now}'.format(
+        now= datetime.now().strftime('%b %dth, %Y - %H:%M hrs')
+        ))
+
+
+def sort_integers(request):
+    """ Returna JSON response with sorted integers. """
+    numbers = [int(i) for i in request.GET['numbers'].split(',')]
+    sorted_ints = sorted(numbers)
+    data = {
+        'status': 'ok',
+        'numbers': sorted_ints,
+        'message': 'Integers sorted successfuly.'
+    }
+    return HttpResponse(json.dumps(data, indent=4), content_type='application/json')
+
+
+def say_hi(request, name, age):
+    """ Return a greeting """
+    if age < 12:
+        message = 'Sorry {}, you are not allowed here'.format(name)
+    else:
+        message = 'Hello, {}! Welcome to Platzigram'.format(name) 
+    return HttpResponse(message)
+```
+
+Si vamos al navegador y pasamos http://127.0.0.1:8000/hi/jeyfred/11/ 
+
+![assets/11.png](assets/11.png)
+
+y ahora si pasamos en el navegador otro argumento http://127.0.0.1:8000/hi/jeyfred/26/
+
+![assets/12.png](assets/12.png)
