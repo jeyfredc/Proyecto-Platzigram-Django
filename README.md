@@ -10,9 +10,9 @@
 
 [Clase 5 El objeto Request](#Clase-5-El-objeto-Request)
 
-[]()
+[Clase 6 Solución al reto - Pasando argumentos en la URL](#Clase-6-Solución-al-reto-Pasando-argumentos-en-la-URL)
 
-[]()
+[Clase 7 Creación de la primera app](#Clase-7-Creación-de-la-primera-app)
 
 []()
 
@@ -766,3 +766,157 @@ Si vamos al navegador y pasamos http://127.0.0.1:8000/hi/jeyfred/11/
 y ahora si pasamos en el navegador otro argumento http://127.0.0.1:8000/hi/jeyfred/26/
 
 ![assets/12.png](assets/12.png)
+
+## Clase 7 Creación de la primera app
+
+Vamos a explorar el concepto de Apps en Django y crearemos nuestra primera app de Platzigram, que es la aplicacion de **posts** y tambien los archivos de apps, admin, views, models y  tests.
+
+La manera de crear una aplicacion dentro Django es utilizar el archivo **Manage.py** para inciarlo debemos ejecutar en la terminal lo siguiente
+
+`python3 manage.py startapp posts`
+
+Es importante destacar que las aplicaciones vengan en plural por convencion. 
+
+Una app dentro de Django es un modulo de python que provee un conjunto de funcionalidades relacionadas entre sí.
+
+Las apps son una combinación de models, vistas, urls, archivos estaticos.
+
+Muchas apps en django estan hechas para ser reutilizadas.
+
+esta es la manera como se ven los nuevos archivos despues de haber ejecutado startapp dentro de la terminal donde vemos una carpeta que se llama **migrations** que es la encarga de guardar los cambios en la base de datos.
+
+El archivo **admin.py**, el cual se encarga de administrar los modelos.
+
+El archivo **apps.py**, el cual declara toda la configuracion de la app hacia el publico en caso de que la app sea reutilizable.
+
+El archivo **models.py**, el cual sirve para definir los modelos de nuestros datos.
+
+El archivo **tests.py**, el cual se usa para pruebas.
+
+y un archivo **views.py** que sirve para hacer render de las vistas 
+
+![assets/13.png](assets/13.png)
+
+Para instalar la aplicacion es necesario realizar la configuracion en el archivo **apps.py**, podemos hacer uso de la documentacion de [applications](https://docs.djangoproject.com/en/3.1/ref/applications/) y configurar el nobmbre
+
+
+```
+""" Posts application module. """
+
+from django.apps import AppConfig
+
+
+class PostsConfig(AppConfig):
+    """ Posts application settings. """
+    
+    name = 'posts'
+    verbose_name = 'Posts'
+```    
+**Nota:** el contenido de **admin.py**, se puede eliminar, es decir que el archivo quede vacio
+
+Ahora para realizar la instalacion de la aplicacion debemos dirigirnos al archivo **settings.py** y agregar la aplicacion, agregamos comentarios para diferenciar las aplicaciones que nos proveedor Django y las propias creadas
+
+```
+INSTALLED_APPS = [
+    # Django apps
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+
+    # Local apps
+    'posts',
+]
+```
+
+para verificar que todo esta funcionando se corre en servidor
+
+`python3 manage.py runserver`
+
+Verificar que todo este corriendo en el servidor de manera correcta y a continuacion vamos a crear una vista para esto dentro de **urls.py** creamos otro `path`.
+
+Para diferenciar las vistas locales cambiamos la estructura de views por local_views y tambien dentro de cada uno de los paths locales y tambien se importan las vistas de posts y las llamamos posts_views
+
+```
+from django.urls import path
+
+from platzigram import views as local_views
+from posts import views as posts_views
+
+
+urlpatterns = [
+
+    path('hello-world/', local_views.hello_world),
+    path('sorted/', local_views.sort_integers),
+    path('hi/<str:name>/<int:age>/', local_views.say_hi),
+    path('posts/', posts_views.list_posts),
+]
+```
+y acontinuacion creamos la vista en **posts/views.py**, a modo de prueba primero le pasamos una lista de numeros reprensentada en cadena
+
+```
+"""Post views.  """
+
+# Django
+from django.http import HttpResponse
+
+
+def list_posts(request):
+    """ List existing posts. """
+    posts = [1, 2, 4]
+    return HttpResponse(str(posts))
+```
+
+verificamos en la terminal que el servidor este corriendo correctamente y recargamos en el navegador http://127.0.0.1:8000/posts/
+
+![assets/14.png](assets/14.png)
+
+y ahora en **posts/views.py** se va a declarar de manera global un diccionario que contenga un name, user, timestamp y picture y en la funcion se va a pasar como html en el navegador. **Nota:** Esto es a manera de ejemplo.
+
+para poder leer todo el diccionario desempaquetamos con `.format(**post)` y para unir todo utilizamos `.join(content)`
+
+```
+"""Post views.  """
+
+# Django
+from django.http import HttpResponse
+from datetime import datetime
+
+posts=[
+    {
+        'name': 'Mont Blanck',
+        'user': 'Jeyfred Calderon',
+        'timestamp' : datetime.now().strftime('%b %dth, %Y - %H:%M hrs'),
+        'picture': 'https://picsum.photos/200/200?image=1036',
+    },
+    {
+        'name': 'Via Láctea',
+        'user': 'c. vander',
+        'timestamp' : datetime.now().strftime('%b %dth, %Y - %H:%M hrs'),
+        'picture': 'https://picsum.photos/200/200?image=903',
+    },
+    {
+        'name': 'Nuevo auditorio',
+        'user': 'Thespianartist',
+        'timestamp' : datetime.now().strftime('%b %dth, %Y - %H:%M hrs'),
+        'picture': 'https://picsum.photos/200/200?image=1076',
+    }
+]
+
+
+def list_posts(request):
+    """ List existing posts. """
+    content = []
+    for post in posts:
+        content.append(""" 
+            <p><strong>{name}</strong></p>
+            <p><small>{user} - <i>{timestamp}</i></small></p>
+            <figure><img src="{picture}"/></figure>
+         """.format(**post))
+    return HttpResponse('<br>'.join(content))
+
+```
+
+![assets/15.png](assets/15.png)
