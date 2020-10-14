@@ -13,6 +13,8 @@ class User(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
 
+    country = models.CharField(blank = True, max_length=20)
+
     is_admin = models.BooleanField(default=False)
 
     bio = models.TextField(blank=True)
