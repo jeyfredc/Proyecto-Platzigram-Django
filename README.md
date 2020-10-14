@@ -14,7 +14,7 @@
 
 [Clase 7 Creación de la primera app](#Clase-7-Creación-de-la-primera-app)
 
-[]()
+[Clase 8 Introducción al template system](#Clase-8-Introducción-al-template-system)
 
 []()
 
@@ -920,3 +920,180 @@ def list_posts(request):
 ```
 
 ![assets/15.png](assets/15.png)
+
+## Clase 8 Introducción al template system
+
+Template system de Django es una manera de presentar los datos usando HTML, está inspirado en Jinja2 y su sintaxis, por lo cual comparte muchas similitudes. Permite incluir alguna lógica de programación.
+
+Para comenzar a usar los templates hay que crear un folder dentro de posts y nombrarla **templates**, en este folder crear un archivo que se llame **feed.html** y en este archivo escribimos `Hola, Mundo!`
+
+Ahora dentro de las vistas de posts **posts/views.py** reemplazamos `from django.http import HttpResponse` por `from django.shortcuts import render`, render es una funcion que toma un request, el nombre del template 
+
+**posts/views.py**
+
+```
+"""Post views.  """
+
+# Django
+from django.shortcuts import render
+
+
+def list_posts(request):
+    """ List existing posts. """
+    return render(request, 'feed.html')
+```
+
+Verificamos que todo este bien con el servidor en la terminal y recargamos http://127.0.0.1:8000/posts/
+
+para que salga `Hola, Mundo!`
+
+La forma en que trabaja render es que necesita pasar a request para agregar contexto al render, el segundo argumento es el nombre del template que se esta buscando. esto viene predefinido en el archivo de **settings.py**, Donde dice que lo va a encontrar dentro de los directorios de las aplicaciones 
+
+```
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True, #Busca dentro de los directorios de las aplicaciones 
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+```
+
+la funcion render tambien puede recibir otro argumento como por ejemplo un diccionario que tenga un nombre
+
+```
+"""Post views.  """
+
+# Django
+from django.shortcuts import render
+from datetime import datetime
+
+
+posts=[
+    {
+        'title': 'Mont Blanck',
+        'user': {
+            'name': 'Jeyfred Calderon',
+            'picture': 'https://lh3.googleusercontent.com/ogw/ADGmqu9Rq5ukqaEtLja_pDNAyZJq7qMy3YTdwSEEdhXF=s32-c-mo',
+        },
+        'timestamp' : datetime.now().strftime('%b %dth, %Y - %H:%M hrs'),
+        'photo': 'https://picsum.photos/800/600?image=1036',
+    },
+    {
+        'title': 'Via Láctea',
+        'user': {
+            'name': 'Christian Van der Henst',
+            'picture': 'https://picsum.photos/60/60?image=1005',
+        },
+        'timestamp' : datetime.now().strftime('%b %dth, %Y - %H:%M hrs'),
+        'photo': 'https://picsum.photos/800/800?image=903',
+    },
+    {
+        'title': 'Nuevo auditorio',
+        'user': {
+            'name': 'Uriel (Thespianartist)',
+            'picture': 'https://picsum.photos/60/60?image=883',
+        },
+        'timestamp' : datetime.now().strftime('%b %dth, %Y - %H:%M hrs'),
+        'photo': 'https://picsum.photos/500/700?image=1076',
+    },
+]
+
+
+def list_posts(request):
+    """ List existing posts. """
+    return render(request, 'feed.html', {'posts': posts})
+```
+
+y cambiar el parametro que recibe **feed.html** por `{{ posts }}`
+
+al recargar el navegador trae lo siguiente pero no es muy util de momento porque no tiene logica de programacion
+
+![assets/16.png](assets/16.png)
+
+Ahora si utilizamos el archivo **feed.html** reemplazamos `{{ posts }}` por lo siguiente
+
+```
+{% for post in posts %}
+    <p>{{ post.title }}</p>
+{%endfor%}
+```
+
+al recargar el navegador se deben imprimir los titulos
+
+![assets/17.png](assets/17.png)
+
+____
+
+A continuacion vamos a utilizar Bootstrap mediante el **CDN** que se encuentra en la de [Booststrap](https://getbootstrap.com/) 
+
+y en el archivo **feed.html** cambiamos la estructura por html5 utilizando Bootstrap
+
+```
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platzigram</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.3/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+  	  {# Cargamos la librería #}
+        {% load bootstrap4 %}
+ 
+        {# CSS Bootstrap #}
+        {% bootstrap_css %}
+</head>
+<body>
+    <br><br>
+    <div class="container">
+        <div class="row">
+            {% for post in posts %}
+            <div class="col-lg-4 offset-lg-4">
+                <div class="media">
+                    <img class="mr-3 rounded-circle" src="{{ post.user.picture }}" alt="{{ post.user.name }}">
+                    <div class="media-body">
+                        <h5 class="mt-0">{{ post.user.name }}</h5>
+                        {{ post.timestamp }}
+                    </div>
+                </div>
+                <img class="img-fluid mt-3 border rounded" src="{{ post.photo }}" alt="{{ post.title }}">
+                <h6 class="ml-1 mt-1">{{ post.title }}</h6>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
+```
+
+Por ultimo debemos instalar Bootstrap en este caso la version 4, para eso abrir el archivo **settings.py** y en `INSTALLED_APPS` agregarlo de esta forma
+
+```
+INSTALLED_APPS = [
+    # Django apps
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'bootstrap4',
+
+    # Local apps
+    'posts',
+]
+```
+
+en caso que no funcione en la terminal ejecutar `pip install django-bootstrap4`
+
+Correr el servidor y recargar el navegador http://127.0.0.1:8000/posts/ 
+
+![assets/18.png](assets/18.png)
