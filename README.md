@@ -20,7 +20,7 @@
 
 [Clase 10 La M en el MTV(model, Template, View)](#Clase-10-La-M-en-el-MTV(model-Template-View))
 
-[]()
+[Clase 11 El ORM de Django](#Clase-11-El-ORM-de-Django)
 
 []()
 
@@ -1262,3 +1262,293 @@ Por tanto nuevamente se debe ejecutar
 para ver que los cambios estan aplicados se puede abrir DB Browser for sqlite y abrir nuevamente el proyecto, donde debe aparecer una tabla llamada **posts_user**
 
 ![assets/27.png](assets/27.png)
+
+## Clase 11 El ORM de Django
+
+A continuacion vamos a ver como insertar datos, hacer consultas y hacer filtros en la base de datos.
+
+Antes de continuar se va a agregar un campo mas a la tabla que va a ser una validacion
+
+**Nota:** Django agrega un id a la tabla por defecto es por esto que no es necesario configurarlo en models
+
+Abrir **posts/models.py** y debajo de last_name agregar lo siguiente `is_admin = models.BooleanField(default=False)` este campo es para cualquier usuario no tenga permiso como administrador.
+
+Al agregar este campo hay que indicarle a Django que la base de datos a cambiado.
+
+Nuevamente se debe apagar el servidor si esta encendido y ejecutar
+
+`python3 manage.py makemigrations`
+
+luego 
+
+`python3 manage.py migrate`
+
+y por ultimo si encender el servidor
+
+`python3 manage.py runserver`
+
+tambien se puede verificar que el campo de halla actualizado en DB Browser for sqlite y ademas al agregar este nuevo campo la terminal nos indica que creo un nuevo archivo en **posts/migrations/0002_user_is_admin.py**
+
+___
+
+Para grabar datos en el ORM se debe abrir el shell de python3 pero por si solo no funciona al ejecutarlo. Por tanto en la terminal se debe ejecutar la siguiente sentencia
+
+`python3 manage.py shell`
+
+utilizando `from posts.models import User` podemos hacer la instancia de un objeto en la base de datos. Por ejempĺo crear un usuario asi
+
+```
+pepito = User.objects.create(
+    email='pepitocarepepito@gmail.com',
+    password='pepito1234',
+    first_name='pepito',
+    last_name='carepepito'
+)
+```
+
+De esta forma es como se crearia un usuario en la tabla User
+
+se puede consultar la propiedad de la clase a traves de sus valores como por ejemplo
+
+`pepito.email` = email
+
+`pepito.id` = id por defecto
+
+`pepito.pk` = llave primaria por defecto
+
+`pepito.firs_tname` = name
+
+![assets/26.png](assets/26.png)
+
+y la otra para confirmar que ya se encuentra en la base de datos es abriendo DB Browser for Sqlite
+
+Seleccionando **Browse Data** y ubicando **Table:** en **post_user**
+
+![assets/29.png](assets/29.png)
+
+si por ejemplo el email quedo con el correo mal configurado para modificarlo se abre nuevamente shell y se ejecuta lo siguiente
+
+`pepito.email = 'pepito@gmail.com'`
+
+`pepito.save()`
+
+Al actualizar DB Browser ya debe aparecer el correo corregido 
+
+![assets/30.png](assets/30.png)
+
+Otra manera de agregar datos a la tabla es instanciar como una clase 
+
+`gonzalo = User()`
+
+`gonzalo.email = 'gonzalo@gmail.com'`
+
+`gonzalo.first_name = 'Gonzalo'`
+
+`gonzalo.last_name = 'Gonzalez'`
+
+`gonzalo.password = 'gongon123'`
+
+`gonzalo.is_admin = True`
+
+`gonzalo.save()`
+
+al finalizar la sentencia con `save()` se guardan los datos en la tabla 
+
+![assets/31.png](assets/31.png)
+
+En caso de querer borrar un usuario de la tabla ejecutar en shell
+
+`gonzalo.delete()`
+
+saldra la siguiente respuesta que es la confirmacion que se elimino el usuario en la base de datos y nuevamente se puede consultar en Db Browser
+
+`(1, {'posts.User': 1})`
+
+![assets/30.png](assets/30.png)
+
+Para hacer mas facil la creacion de datos a continuacion se dejan 4 usuarios mas para crear, esto se puede realizar en algun archivo y luego pegar en el shell
+
+```
+from datetime import date 
+
+users = [
+    {
+        'email': 'reyes_k423@gmail.com',
+        'first_name': 'Camilo',
+        'last_name': 'Reyes',
+        'password' : '1234567',
+        'is_admin': True
+    },
+    {
+        'email': 'mariadb@gmail.com',
+        'first_name': 'Maria',
+        'last_name': 'Dionisia Benabidez',
+        'password' : '5556655'
+    },
+    {
+        'email': 'pablo.barato@hotmail.com',
+        'first_name': 'Pablo',
+        'last_name': 'Barato',
+        'password' : '12345',
+        'birthdate' : date(1990, 12, 19),
+        'bio' : "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
+    },
+    {
+        'email': 'Ana_de_platzi@gmail.com',
+        'first_name': 'Ana',
+        'last_name': 'de_platzi',
+        'password' : 'computer',
+        'is_admin': True,
+        'birthdate' : date(1981, 4, 10)
+    }
+]
+
+from posts.models import users
+
+for user in users:
+    obj = User(**user)
+    obj.save()
+    print(obj.pk)
+```
+
+![assets/32.png](assets/32.png)
+
+___
+
+Para hacer querys o consultas se puede hacer uso de la [documentacion](https://docs.djangoproject.com/en/3.1/topics/db/queries/)
+
+para traer algun usuario de los creados por ejemplo pablo barato se abre shell y con `get` es posible traer un usuario: 
+
+A continuacion se ejecuta
+
+`from posts.models import User`
+
+`user = User.objects.get(email='pablo.barato@hotmail.com')`
+
+hasta aqui no pasa nada pero si se escribe 
+
+`user`
+
+regresa el id de usuario con el que fue creado pablo el cual seria el numero 5 y lo trae de la siguiente forma
+
+`<User: User object (5)>`
+
+si se pide el tipo de usuario 
+
+`type(user)`
+
+regresa indicando que es una instancia de la clase User
+
+`<class 'posts.models.User'>`
+
+tambien se pueden traer todos los datos
+
+`user.first_name`
+
+`user.last_name`
+
+`user.bio`
+
+`user.password`
+
+![assets/33.png](assets/33.png)
+
+___
+
+Todos los usuarios creados hasta el momento fueron configurados con correos gmail a excepcion de pablo que es hotmail para filtrar estos datos se puede hacer uso de `filter` y se ejecuta lo siguiente en shell
+
+**Nota:** la notacion de email**__**, doble guion bajo es para anunciar que se va a realizar un query especial
+
+`gmail_users = User.objects.filter(email__endswith='@gmail.com')`
+
+luego ejecutar 
+
+`gmail_users`
+
+pero esto va a traer los id de los usuarios, en este caso me aparecen 3 porque el correo de pepito no quedo como pepito@gmail.com si no como pepito@mail.com
+
+`<QuerySet [<User: User object (3)>, <User: User object (4)>, <User: User object (6)>]>`
+
+![assets/34.png](assets/34.png)
+
+___
+
+para poder traer objetos diferentes al id se puede crear un metodo en el archivo **posts/models.py** despues de la clase y agregar
+
+```
+    def __str__(self):
+        """ retun self.email """
+        return self.email
+``` 
+
+Guardar, salir de shell y ejecutar nuevamente shell recordando que lo primero que se hacer es ejecturar
+
+`from posts.models import User`
+
+`gmail_users = User.objects.filter(email__endswith='@gmail.com')`
+
+`gmail_users`
+
+esto va a traer la representacion de los correos como un string
+
+![assets/36.png](assets/36.png)
+
+si se requiere traer a todos los usuarios se puede ejecutar
+
+`users = User.objects.all()`
+
+`users`
+
+y esto es lo que traera en shell
+
+`<QuerySet [<User: pepito@mail.com>, <User: reyes_k423@gmail.com>, <User: mariadb@gmail.com>, <User: pablo.barato@hotmail.com>, <User: Ana_de_platzi@gmail.com>]>`
+
+**Nota:** Recordar que **get** es para traer un solo dato y **filter** para traer varios
+
+Tambien se puede filtrar mediante un for si los correos que estan como gmail tiene permisos de administrador o no de la siguiente forma
+
+ejecutar en shell
+
+```
+for u in gmail_users:
+    print(u.email, ':', u.is_admin)
+```
+
+y esto trae 
+
+```
+reyes_k423@gmail.com : True
+mariadb@gmail.com : False
+Ana_de_platzi@gmail.com : True
+```
+___
+
+Ahora para actualizar que todos los usuarios que tienen correo gmail tienen permisos de administracion se ejecuta en shell lo siguiente
+
+`gmail_users = User.objects.filter(email__endswith='gmail.com').update(is_admin=True)`
+
+**.update** lo que hace es actualizar los datos de todos los correos terminados en **gmail.com**, para verificar se puede consultar en DB Browser, los valores deben estar con el campo con el numero 1
+
+![assets/37.png](assets/37.png)
+
+si se quiere que toda la lista de usuarios creados queden con permiso se puede ejecutar lo siguiente
+
+`mail_users = User.objects.filter(email__endswith='mail.com')`
+
+esto trae a todos los que terminen en **mail.com** que serian los 5 usuarios creados hasta el momento
+
+`<QuerySet [<User: pepito@mail.com>, <User: reyes_k423@gmail.com>, <User: mariadb@gmail.com>, <User: pablo.barato@hotmail.com>, <User: Ana_de_platzi@gmail.com>]>`
+
+y luego ejecutar 
+
+`mail_users = User.objects.filter(email__endswith='mail.com').update(is_admin=True)`
+
+consultado en DB Browser, todos los usuarios ahora deberian estar activos
+
+![assets/35.png](assets/35.png)
+
+**Reto de la clase:**
+
+Inserta mas usuarios a la base de datos que hemos construido en nuestro entorno de pruebas y realiza consultas en el ORM para traer a los admins.
+
+Crea un nuevo campo PAÍS en el modelo, inserta usuarios y haz filtros.
