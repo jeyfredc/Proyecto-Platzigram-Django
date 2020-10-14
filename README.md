@@ -1033,7 +1033,7 @@ al recargar el navegador se deben imprimir los titulos
 
 ____
 
-A continuacion vamos a utilizar Bootstrap mediante el **CDN** que se encuentra en la de [Booststrap](https://getbootstrap.com/) 
+A continuacion vamos a utilizar Bootstrap mediante el **CDN** que se encuentra en la pagina de [Booststrap](https://getbootstrap.com/) 
 
 y en el archivo **feed.html** cambiamos la estructura por html5 utilizando Bootstrap
 
