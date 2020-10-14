@@ -16,7 +16,7 @@
 
 [Clase 8 Introducción al template system](#Clase-8-Introducción-al-template-system)
 
-[]()
+[Clase 9 Patrones de diseño y Django](#Clase-9-Patrones-de-diseño-y-Django)
 
 []()
 
@@ -1097,3 +1097,12 @@ en caso que no funcione en la terminal ejecutar `pip install django-bootstrap4`
 Correr el servidor y recargar el navegador http://127.0.0.1:8000/posts/ 
 
 ![assets/18.png](assets/18.png)
+
+## Clase 9 Patrones de diseño y Django
+
+Un patrón de diseño, en términos generales, es una solución reutilizable a un problema común.
+El patrón más común para el desarrollo web es MVC (Model, View, Controller) el cual utiliza principalmente PHP y es la manera de separar los datos de la presentacion y de la logica, el Controller es el que maneja la logica de request, sabe que hacer en ese momento y que template debe mostrar. El Controller va a cambiar los datos a traves del modelo y este es el que se encarga de definir la estructura de los datos, el acceso a ellos e incluso la validacion. Finalmente la vista es la que se encarga de ver como presenta los datos al usuario. 
+
+![assets/19.png](assets/19.png)
+
+Django implementa un patrón similar llamado MTV (Model, Template, View). Donde el modelo es el que define la estructura de los datos, el Template es la logica de la presentacion de los datos y la vista es la encargada de traer los datos y pasarlos por el template.
