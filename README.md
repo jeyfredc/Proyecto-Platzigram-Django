@@ -18,7 +18,7 @@
 
 [Clase 9 Patrones de diseño y Django](#Clase-9-Patrones-de-diseño-y-Django)
 
-[]()
+[Clase 10 La M en el MTV(model, Template, View)](#Clase-10-La-M-en-el-MTV(model-Template-View))
 
 []()
 
@@ -1106,3 +1106,159 @@ El patrón más común para el desarrollo web es MVC (Model, View, Controller) e
 ![assets/19.png](assets/19.png)
 
 Django implementa un patrón similar llamado MTV (Model, Template, View). Donde el modelo es el que define la estructura de los datos, el Template es la logica de la presentacion de los datos y la vista es la encargada de traer los datos y pasarlos por el template.
+
+## Clase 10 La M en el MTV(model, Template, View)
+
+
+Para entender mejor esta clase descargar [DB Browser for Sqlite](https://sqlitebrowser.org/dl/)
+
+En el archivo **settings.py** encontramos la condiguracion de la base de datos que trae por default Django el cual es sqlite3 que es un archivo que ya esta presente en el folder de **Platzigram**
+
+```
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+```
+
+El Modelo en Django usa diferentes opciones para conectarse a múltiples bases de datos relacionales, entre las que se encuentran: SQLite, PostgreSQL, Oracle y MySQL.
+
+Para revisarlo como se configura con otra vase de datos debemos revisar en la parte de [DATABASES ENGINE](https://docs.djangoproject.com/en/3.1/ref/settings/#databases) ENGINE especifica el sistema de base de datos con el que vamos a estar trabajando. 
+
+Pero si queremos trabajar con Postgresql o Mysql toca configurar el `HOST` que es la ubicacion de la base de datos donde esta corriendo.
+
+___
+
+Cuando corremos el servidor con `python3 manage.py runserver`
+
+![assets/20.png](assets/20.png)
+
+la terminal indica que hay 18 migraciones que no se han aplicado y que el proyecto puede no funcionar correctamente porque las apps que trae por default no han encontrado esa migracion
+
+Ahora si tenemos el servidor encendido apagarlo con `Ctrl + C`
+
+para ejecutar los cambios de las migraciones en la base de datos que viene por defecto, escribir en la terminal 
+
+`python3 manage.py migrate`
+
+![assets/21.png](assets/21.png)
+
+y vemos que todo queda OK
+
+Ahora podemos hacer uso de **DB Browser for Sqlite** para abrir el archivo que tenemos en el proyecto
+
+Dar click en Open Database, buscamos el fichero db.sqlite3 del proyecto Platzigram y damos click en abrir
+
+este archivo creo todas las tablas que aparecen en la imagen 
+
+![assets/22.png](assets/22.png)
+
+Si se quiere crear una tabla en caso de no usar un Framework como Django lo que habria que hacer es escribir todas las sentencias SQL como las de la imagen para crear esa tabla, y esas sentencias SQL cambian de Engine a Engine, no son las mismas que se usan para Postgresql como las que se usan para Mysql.
+
+Para la creación de tablas, Django usa la técnica del ORM (Object Relational Mapper), una abstracción del manejo de datos usando Programacion Orientada a Objetos, esto es en el caso de Django para trabajar con multiples sistemas como Postgresql, Mysql o oracle a traves de clases de Python.
+
+En definitiva el ORM es un conjunto de clases que permiten interactuar con bases de datos y definir la estructura de tablas.
+
+Como ejempĺo se va a crear un modelo de usuario pero este ya viene con sqlite3.
+
+para crearlo abrir el archivo **posts/models.py**
+
+Para crear un modelo de base de datos como el de la imagen se debe crear una clase, para verificar que los campos que a continuacion se muestran sirven con la base de datos se debe consultar la documentacion que es la [referencia a la base de datos](https://docs.djangoproject.com/en/3.1/ref/models/fields/)
+
+```
+""" posts models. """
+
+#Django
+from django.db import models
+
+
+class User(models.Model):
+    """ User model. """
+
+    email = models.EmailField()
+    password = models.CharField()
+
+    first_name = models.CharField()
+    last_name = models.CharField()
+
+    bio = models.TextField()
+
+    birthdate = models.DateField()
+
+    created =  models.DateTimeField()
+    modified = models.DateTimeField()
+```
+
+Si a continuacion de guardar esto se corre el servidor, nos va a informar que esta faltando
+
+![assets/23.png](assets/23.png)
+
+Donde indica que se necesecita tener una maxima longitud para los campos first_name, last_name y password
+
+Terminando de configurar la base de datos se agrega lo siguiente
+
+```
+""" posts models. """
+
+#Django
+from django.db import models
+
+
+class User(models.Model):
+    """ User model. """
+
+    email = models.EmailField(unique=True)
+    password = models.CharField(max_length=100)
+
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+
+    bio = models.TextField(blank=True)
+
+    birthdate = models.DateField(blank=True, null=True)
+
+    created =  models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+```
+
+- **(max_length=100)** son campos que contienen una maxima longitud
+
+- **(unique=True)** es un campo para que el email como en el ejemplo sea unico
+
+- **(blank=True, null=True)** En el ejemplo depronto la fecha de cumpleaños puede no ser necesaria por tanto se pone en blanco pero por ser un campo numerico se debe configurar como nulo 
+
+- **(auto_now_add=True)** Este sirve para cargar una fecha de creacion de dato en la tabla
+
+- **(auto_now=True)** Este sirve para cargar una fecha de actualizacion de dato en la tabla
+
+Si nuevamente se revisa el servidor despues de haber agregado estos campos ya no debe indicar ningun tipo de error.
+
+Para que tanto DB Browser for sqlite y Django detecten el cambio o modificacion que se hizo en **posts/models.py** 
+
+debemos apagar el servidor nuevamente y ahora usar la sentencia
+
+`python3 manage.py makemigrations`
+
+![assets/24.png](assets/24.png)
+
+E indica que se creo un modelo de usuario y realizo unos cambios que se pueden ver en la carpeta **posts/migrations/0001_initial.py**
+
+el archivo es otra clase de Python que indica que fue lo que se creo 
+
+![assets/25.png](assets/25.png)
+
+Si se ejecuta el servidor nuevamente va indicar que esta pendiente 1 migracion 
+
+![assets/26.png](assets/26.png)
+
+Por tanto nuevamente se debe ejecutar
+
+`python3 manage.py migrate`
+
+`python3 manage.py runserver`
+
+para ver que los cambios estan aplicados se puede abrir DB Browser for sqlite y abrir nuevamente el proyecto, donde debe aparecer una tabla llamada **posts_user**
+
+![assets/27.png](assets/27.png)
