@@ -24,7 +24,7 @@
 
 [Clase 12 Glosario](#Clase-12-Glosario)
 
-[]()
+[Clase 13 Extendiendo el modelo de usuario](#Clase-13-Extendiendo-el-modelo-de-usuario)
 
 []()
 
@@ -1566,3 +1566,111 @@ Crea un nuevo campo PAÍS en el modelo, inserta usuarios y haz filtros.
 - **App**: Conjunto de código que se encarga de resolver una parte muy específica del proyecto, contiene sus modelos, vistas, urls, etc.
 
 - **Patrón de diseño**: Solución común a un problema particular.
+
+## Clase 13 Extendiendo el modelo de usuario
+
+El modelo de usuarios que acabamos de construir funciona bien y es válido, sin embargo tiene algunas cosas que podrían representar fallas de seguridad en la aplicación. Por esto vamos a explorar el modelo de usuarios que nos provee Django.
+
+El problema de tener este modelo es que la contraseña esta en texto plano, no existen metodos para verificarla, almacenarla de manera segura, ni tampoco una manera para validar su fortaleza.
+
+Django trae un modelo de usuarios por default la cual se va aextender para utilizar de manera segura
+
+en las bases de datos se ven de esta forma
+
+![assets/38.png](assets/38.png)
+
+pero es importante saber que la existencia de esto es gracias a `'django.contrib.auth'` el cual se encuentra en el archivo de **settings.py** en la parte de `INSTALLED APPS` e incluye el modelo de usuario.
+
+Para hacer uso del modelo de usuario se debe ingresar desde shell
+
+para incluirlo se hace de la siguiente forma
+
+`from django.contrib.auth.models import User`
+
+Luego se crea un nuevo usuario, pero este debe recibir como parametro el username y el password
+
+`u = User.objects.create_user(username='gonzalo', password='gonzalez')`
+
+despues de crearlo se puede ver que gonzalo es un usuario
+
+`u`
+
+que tambien tiene un id
+
+`u.pk`
+
+que tiene username
+
+`u.username`
+
+y tambien el valor del password que ya viene encriptado
+
+`u.password`
+
+![assets/39.png](assets/39.png)
+
+en DB Browser tambien se puede ver en la tabla **auth_user**
+
+![assets/40.png](assets/40.png)
+
+Ahora hay que crear un super usuario en shell
+
+se crea de la siguiente forma:
+
+`python3 manage.py createsuperuser`
+
+a continuacion va a pedir un username, despues un email, el password, confirmacion de password
+
+![assets/41.png](assets/41.png)
+
+despues de esto se puede validar en DB Browser.
+
+___
+
+Ahora se va a validar en admin, para eso abrir **urls.py** importar `from django.contrib import admin` y luego agregar el path de admin `path('admin/', admin.site.urls),`
+
+```
+""" Platzigram URLs module. """
+
+#Django
+from django.contrib import admin
+from django.urls import path
+
+from platzigram import views as local_views
+from posts import views as posts_views
+
+
+urlpatterns = [
+
+    path('admin/', admin.site.urls),
+
+    path('hello-world/', local_views.hello_world),
+    path('sorted/', local_views.sort_integers),
+    path('hi/<str:name>/<int:age>/', local_views.say_hi),
+    path('posts/', posts_views.list_posts),
+]
+```
+
+luego en la consola correr el servidor. verificar que todo este bien y ir al path de admin en http://127.0.0.1:8000/admin/
+
+inmediatamente despues de colocar la ruta se va a abrir el login de admin
+
+![assets/42.png](assets/42.png)
+
+Alli se digita el nombre del super usuario creado con la contraseña asignada 
+
+luego de esto, hay un acceso a grupos y a usuarios al dar click en usuarios esta todo el acceso a los que se han creado hasta el momento
+
+![assets/43.png](assets/43.png)
+
+la documentacion de todo esto se puede ver en el repositorio de GitHub de [Django](https://github.com/django/django) y para ver lo que se esta creando ir a la ruta [models](https://github.com/django/django/blob/master/django/contrib/auth/models.py)
+
+___
+
+A continuacion borrar todo lo que se encontraba en el archivo **posts/models.py**, sin borrar el archivo, no se requiere ya que se esta haciendo uso de las aplicaciones que provee Django.
+
+Borrar los archivos que se encuentren en **posts/migrations**, sin borrar el archivo **__init__.py**
+
+Borrar tambien el archivo de bases de datos que es **db.sqlite3** 
+
+**Nota:** Todo lo que se borro eran modelos de ejemplo
