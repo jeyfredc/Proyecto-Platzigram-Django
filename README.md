@@ -1667,7 +1667,7 @@ la documentacion de todo esto se puede ver en el repositorio de GitHub de [Djang
 
 ___
 
-A continuacion borrar todo lo que se encontraba en el archivo **posts/models.py**, sin borrar el archivo, no se requiere ya que se esta haciendo uso de las aplicaciones que provee Django.
+A continuacion borrar todo el contenido que se encuentr en el archivo **posts/models.py**, sin borrar el archivo **models.py**, no se requiere, ya que se esta haciendo uso de las aplicaciones que provee Django.
 
 Borrar los archivos que se encuentren en **posts/migrations**, sin borrar el archivo **__init__.py**
 
