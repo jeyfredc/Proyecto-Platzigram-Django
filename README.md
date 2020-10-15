@@ -26,7 +26,7 @@
 
 [Clase 13 Extendiendo el modelo de usuario](#Clase-13-Extendiendo-el-modelo-de-usuario)
 
-[]()
+[Clase 14 Implementación del modelo de usuarios de Platzigram](#Clase-14-Implementación-del-modelo-de-usuarios-de-Platzigram)
 
 []()
 
@@ -797,7 +797,7 @@ y un archivo **views.py** que sirve para hacer render de las vistas
 
 ![assets/13.png](assets/13.png)
 
-Para instalar la aplicacion es necesario realizar la configuracion en el archivo **apps.py**, podemos hacer uso de la documentacion de [applications](https://docs.djangoproject.com/en/3.1/ref/applications/) y configurar el nobmbre
+Para instalar la aplicacion es necesario realizar la configuracion en el archivo **apps.py**, podemos hacer uso de la documentacion de [applications](https://docs.djangoproject.com/en/3.1/ref/applications/) y configurar el nombre
 
 
 ```
@@ -1674,3 +1674,145 @@ Borrar los archivos que se encuentren en **posts/migrations**, sin borrar el arc
 Borrar tambien el archivo de bases de datos que es **db.sqlite3** 
 
 **Nota:** Todo lo que se borro eran modelos de ejemplo
+
+## Clase 14 Implementación del modelo de usuarios de Platzigram
+
+Las opciones que Django propone para implementar Usuarios personalizados son:
+
+- Usando el Modelo [proxy](https://docs.djangoproject.com/en/3.1/ref/models/fields/)
+
+- Extendiendo la clase abstracta de [Usuario existente](https://docs.djangoproject.com/en/dev/topics/auth/customizing/#extending-the-existing-user-model)
+
+- La opción OneToOneField restringe la posibilidad de tener perfiles duplicados.
+
+Django no guarda archivos de imagen en la base de datos sino la referencia de su ubicación.
+
+para empezar hay que crear una nueva aplicacion llamada users en consola
+
+`python3 manage.py startapp users`
+
+Ahora existe un nuevo folder llamado **users** con los mismos archivos que tenia **posts**
+
+abrir **users/apps.py** para empezar a configurar el proyecto recordando que se debe establecer `verbose_name = 'Users'` el cual debe ir en plural
+
+```
+""" User app configuration. """
+
+from django.apps import AppConfig
+
+
+class UsersConfig(AppConfig):
+    """User app config.  """
+
+    name = 'users'
+    verbose_name = 'Users'
+```
+
+abrir **users/models.py**
+
+segun la documentacion lo que dice es que debe extender el modelo User `from django.contrib.auth.models import User`
+
+el nombre mas indicado para crear el perfil de platzigram seria **Profile** `class Profile(models.Models)`
+
+se hace uso de [OneToOneField](https://docs.djangoproject.com/en/3.1/ref/models/fields/#onetoonefield) 
+
+```
+""" Users models. """
+
+#Django
+from django.contrib.auth.models import User
+from datetime import datetime
+from django.db import models
+
+
+class Profile(models.Models):
+    """Profile Model  
+    
+    Proxy model that extends the base data with other information.
+    """
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    website = models.URLField(max_length=200, blank=True)
+    biography = models.TextField(blank=True)
+    phone_number = models.CharField(max_length=20, blank=True)
+
+    picture = models.ImageField(upload_to='users/pictures', blank=True, null=True)
+
+    created = models.DateField(auto_now_add=True)
+    modified = models.DateField(auto_now=True)
+
+
+def __str__(self):
+    """ return username """
+
+    return self.user.username
+```
+
+Ahora hay que hacer la instalacion de la aplicacion users en el archivo **settigs.py** en `INSTALLED APPS` y poner debajo de `posts` a `users`
+
+```
+INSTALLED_APPS = [
+    # Django apps
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'bootstrap4',
+
+    # Local apps
+    'posts',
+    'users',
+]
+```
+
+Como se realiza un cambio en la base de datos hay que hacer la migracion en consola con 
+
+`python3 manage.py makemigrations`
+
+despues ejecutar 
+
+`python3 manage.py migrate`
+
+A continuacion marca este error que indica que o esta instalado Pillow 
+
+```
+SystemCheckError: System check identified some issues:
+
+ERRORS:
+users.Profile.picture: (fields.E210) Cannot use ImageField because Pillow is not installed.
+	HINT: Get Pillow at https://pypi.org/project/Pillow/ or run command "python -m pip install Pillow".
+```
+(Pillow es una variante (o fork) de la popular librería PIL (Python Image Library) que permite procesar con facilidad imágenes con Python 2. x/3. ... Con Pillow podemos consultar información básica de una imagen como su tamaño, el formato que tiene (jpg, png, gif, etc.), el tipo de imagen (bits/pixel, BN/color, etc.)), la aplicacion obliga a instalar pillow porque en el modelo de bases de datos al crear el objeto `picture` obliga a tener una referencia de imagen el cual trabaja con esta libreria.
+
+para instalar simplemente se ejecuta
+
+`pip install pillow`
+
+Nuevamente ejecutar 
+
+`python3 manage.py makemigrations`
+
+`python3 manage.py migrate`
+
+Nuevamente hay que crear el superusuario porque antes se borro la base de datos
+
+`python3 manage.py createsuperuser`
+
+a continuacion va a pedir un username, despues un email, el password, confirmacion de password
+
+![assets/41.png](assets/41.png)
+
+despues de esto se puede validar en DB Browser.
+
+y por ultimo encender el servidor
+
+`python3 manage.py runserver`
+
+verificar si esta ingresando con http://127.0.0.1:8000/admin/
+
+y que la base de datos **users_profile** se encuentre creada
+
+![assets/44.png](assets/44.png)
