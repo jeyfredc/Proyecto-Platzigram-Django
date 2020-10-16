@@ -28,7 +28,7 @@
 
 [Clase 14 Implementación del modelo de usuarios de Platzigram](#Clase-14-Implementación-del-modelo-de-usuarios-de-Platzigram)
 
-[]()
+[Clase 15 Explorando el dashboard de administración](#Clase-15-Explorando-el-dashboard-de-administración)
 
 []()
 
@@ -1816,3 +1816,158 @@ verificar si esta ingresando con http://127.0.0.1:8000/admin/
 y que la base de datos **users_profile** se encuentre creada
 
 ![assets/44.png](assets/44.png)
+
+## Clase 15 Explorando el dashboard de administración
+
+Registraremos el perfil que acabamos de customizar, junto con el modelo extendido de Usuario, en el admin de Django para poder manejarlo desde la aplicación.
+
+Esto puede hacerse de dos formas: con admin.site.register(Profile) o creando una nueva clase que herede de Admin.ModelAdmin.
+
+Hasta el momento es posible ingresar a admin pero como tal no hay un perfil de usuario creado 
+
+Abrir el archivo **users/admin.py**
+
+lo primero que hay que hacer es importar Profile `from users.models import Profile` y luego registrar el modelo con `admin.site.register(Profile)`
+
+```
+""" User admin classes. """
+#Django
+from django.contrib import admin
+
+#Models
+from users.models import Profile
+
+# Register your models here.
+admin.site.register(Profile)
+```
+
+Ahora si cargamos el navegador ya aparece Profiles en el admin
+
+![assets/45.png](assets/45.png)
+
+Si ahora se selecciona el boton Add se puede crear el perfil de usuario con website, biografia, numero e imagen l dar click en save queda creado el primer perfil
+
+![assets/46.png](assets/46.png)
+
+Ahora se va a modificar el registro y crear una clase en el archivo **users/admin.py** que se va a llamar `ProileAdmin`, por convencion siempre se agrega la palabra Admin al final de la clase, para registrarlo en una sola linea se puede hacer a traves de un decorador `@admin.register(Profile)` y 
+la clase puede estar vacia
+
+```
+""" User admin classes. """
+#Django
+from django.contrib import admin
+
+#Models
+from users.models import Profile
+
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    """ Profile admin. """
+
+    pass
+```
+
+con la modificacion realizada, la pagina de momento va a seguir funcionando igual
+
+Al dar  click en Profile los datos del perfil no estan cargando
+
+![assets/47.png](assets/47.png)
+
+para ordenarlo en la clase `ProfileAdmin` hay que agregar un `list_display` para darle el orden que se requiera
+
+```
+""" User admin classes. """
+#Django
+from django.contrib import admin
+
+#Models
+from users.models import Profile
+
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    """ Profile admin. """
+
+    list_display = ('user', 'phone_number', 'website', 'picture')
+```    
+
+despues de guardar los cambios con la lista, el perfil se mostrara de la siguiente forma y con el orden que se esta aplicando
+
+![assets/48.png](assets/48.png)
+
+Por el momento solo al dar click al usuario va hacia el detalle del mismo para hacer algun tipo de modificacion
+
+existen otras propiedades para que el numero, el website lo linkee directamente al perfil para hacer alguna modificacion agregando `list_display_links` y seleccionando los objetos que van a adquirir esas propiedades 
+
+```
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    """ Profile admin. """
+
+    list_display = ('pk','user', 'phone_number', 'website', 'picture')
+    list_display_links = ('pk', 'user', 'phone_number')
+```
+
+![assets/49.png](assets/49.png)
+
+y tambien existe otra propiedad que permite que se hagan modificaciones directamente desde el perfil
+
+```
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    """ Profile admin. """
+
+    list_display = ('pk','user', 'phone_number', 'website', 'picture')
+    list_display_links = ('pk', 'user', 'phone_number')
+        list_editable =('phone_number', 'website', 'picture')
+```
+
+![assets/50.png](assets/50.png)
+
+Ahora se puede hacer mas pruebas para crear mas usuarios dando click en **User + Add**
+
+![assets/51.png](assets/51.png)
+
+se asigna nombre, apellido y luego se guarda
+
+![assets/52.png](assets/52.png)
+
+por ultimo seleccionar **Profile + Add** para añadir el perfil 
+
+![assets/53.png](assets/53.png)
+
+y luego verificar que esten creado los dos perfiles
+
+![assets/54.png](assets/54.png)
+
+Si se quiere agregar una barra de busqueda para hacer mas sencilla la lista cuando existan muchos usuarios existe la propiedad `search_fields`
+
+```
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    """ Profile admin. """
+
+    list_display = ('pk','user', 'phone_number', 'website', 'picture')
+    list_display_links = ('pk', 'user')
+    list_editable = ('phone_number', 'website', 'picture')
+    search_fields = ('user__email', 'user__name','user__first_name', 'user__last_name', 'phone_number')
+```
+
+![assets/55.png](assets/55.png)
+
+tambien se pueden añadir filtros para utilizar mas adelante con la propiedad `list_filter`, estos salen al costado derecho de **Profile**
+
+```
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    """ Profile admin. """
+
+    list_display = ('pk','user', 'phone_number', 'website', 'picture')
+    list_display_links = ('pk', 'user')
+    list_editable = ('phone_number', 'website', 'picture')
+    search_fields = ('user__email', 'user__name', 'user__first_name', 'user__last_name', 'phone_number')
+    list_filter = ('user__is_active', 'user__is_staff', 'created', 'modified')
+```
+
+![assets/56.png](assets/56.png)
