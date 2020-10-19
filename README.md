@@ -30,7 +30,7 @@
 
 [Clase 15 Explorando el dashboard de administración](#Clase-15-Explorando-el-dashboard-de-administración)
 
-[]()
+[Clase 16 Dashboard de Administración](#Clase-16-Dashboard-de-Administración)
 
 []()
 
@@ -1971,3 +1971,214 @@ class ProfileAdmin(admin.ModelAdmin):
 ```
 
 ![assets/56.png](assets/56.png)
+
+## Clase 16 Dashboard de Administración
+
+Editaremos el detalle para que sea igual de complejo que el detalle de Usuario y le agregaremos los datos del perfil para no tener que estar cambiando de urls. Usaremos fieldsets y admin.StackedInline.
+
+En la documentación de Django, https://docs.djangoproject.com/en/3.1/ref/contrib/admin/ podemos ver cómo funcionan los fieldsets.
+
+Cuando se ingresa a cualquier perfil del administrador se ve la presentacion de la siguiente forma
+
+![assets/53.png](assets/53.png)
+
+para cambiar la presentacion del perfil en **users/admin.py** debajo de los `list_filter` se crea el fieldsets el cual sirve para controlar el diseño de la pagina y esta contiene sus configuraciones a traves de tuplas
+
+```
+    fieldsets = (
+        ('Profile', {
+            'fields': (
+            ('user', 'picture'),
+            ),
+        }),
+    )
+```
+
+Al guardar cambia la forma de la presentacion, por ejemplo solo muestra informacion del usuario  y la imagen
+
+![assets/57.png](assets/57.png)
+
+Al agregar mas informacion a la tupla se puede ver que se agrega un campo mas a otra fila donde arroja la informacion del numero y pagina 
+
+
+```
+    fieldsets = (
+        ('Profile', {
+            'fields': (
+            ('user', 'picture'),
+            ('phone_number', 'website'),
+            ),
+        }),
+    )
+```
+![assets/58.png](assets/58.png)
+
+Ahora se va a poner otra informacion a traves de otra tupla con lo siguiente
+
+```
+    fieldsets = (
+        ('Profile', {
+            'fields': (('user', 'picture'),),
+        }),
+        ('Extra info', {
+            'fields' : (
+                ('website', 'phone_number'),
+                ('biography')
+            )
+        }),
+    )
+```
+
+![assets/59.png](assets/59.png)
+
+A continuacion se va a introducir un campo de metadata pero este no funciona como los otros campos porque no es editable
+
+```
+    fieldsets = (
+        ('Profile', {
+            'fields': (('user', 'picture'),),
+        }),
+        ('Extra info', {
+            'fields' : (
+                ('website', 'phone_number'),
+                ('biography')
+            )
+        }),
+        ('Metadata', {
+            'fields' : (
+                ('created', 'modified'),
+            )
+        }),
+    )
+```    
+
+Para que esto funcione hay que llamar otra variable llamara `readonlyfields` y quiere decir que todo lo que este dentro de la variable, al acceder al detalle no se va a poder modificar
+
+```
+    fieldsets = (
+        ('Profile', {
+            'fields': (('user', 'picture'),),
+        }),
+        ('Extra info', {
+            'fields' : (
+                ('website', 'phone_number'),
+                ('biography')
+            )
+        }),
+        ('Metadata', {
+            'fields' : (
+                ('created', 'modified'),
+            )
+        }),
+    )
+
+    readonly_fields = ('created', 'modified', 'user')
+```
+
+![assets/60.png](assets/60.png)
+
+Al añadir un usuario hay que dar click en add User y luego pasar a Profiles para crear el perfil del usuario, existe una forma que extiende el modelo de usuario para tener al usuario y al perfil y crearlos en el mismo lugar, la informacion se encuentra en la [documentacion](https://docs.djangoproject.com/en/3.1/topics/auth/customizing/#extending-the-existing-user-model) actualmente la pagina se ve asi 
+
+![assets/61.png](assets/61.png)
+
+para realizar el cambio y tener todo en la misma pagina se debe crear una cllase llamada `ProfileInline` y hereda de `admin.StackedInline` y lo unico que recibe como parametro es el modelo, indica que no se puede eliminar y recibe el modelo en plural
+
+`model = Profile`
+`can_delete = False`
+`verbose_name_plural = 'profiles'`
+
+despues hay que crear la clase `UserAdmin` que hereda de `BaseUserAdmin` para eso hay que importar el modelo `from django.contrib.auth.admin import UserAdmin as BaseUserAdmin` luego se debe registrar `inlines` en una tupla y por ultimo desregistrar al usuario y luego agregar al usuario administador
+
+```
+""" User admin classes. """
+#Django
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib import admin
+#Models
+from django.contrib.auth.models import User
+from users.models import Profile
+
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    """ Profile admin. """
+
+    list_display = ('pk','user', 'phone_number', 'website', 'picture')
+    list_display_links = ('pk', 'user')
+    list_editable = ('phone_number', 'website', 'picture')
+    search_fields = ('user__email', 'user__name', 'user__first_name', 'user__last_name', 'phone_number')
+    list_filter = ('user__is_active', 'user__is_staff', 'created', 'modified')
+
+    fieldsets = (
+        ('Profile', {
+            'fields': (('user', 'picture'),),
+        }),
+        ('Extra info', {
+            'fields' : (
+                ('website', 'phone_number'),
+                ('biography')
+            )
+        }),
+        ('Metadata', {
+            'fields' : (
+                ('created', 'modified'),
+            )
+        }),
+    )
+
+    readonly_fields = ('created', 'modified', 'user')
+
+class ProfileInline(admin.StackedInline):
+    """ Profile in-line admin for users. """
+
+    model = Profile
+    can_delete = False
+    verbose_name_plural = 'profiles'
+
+
+# Define a new User admin
+class UserAdmin(BaseUserAdmin):
+    """ Add profile admin to base user admin. """
+
+    inlines = (ProfileInline,)
+
+# Re-register UserAdmin
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
+``` 
+
+y ahora al recargar la pagina no solo se puede crear al usuario si no que de una vez se puede crear tanto usuario como perfil
+
+![assets/62.png](assets/62.png)
+
+y luego despues de hacer el registro crear el nombre apellido e email
+
+![assets/63.png](assets/63.png)
+
+y por ultimo se pueden editar otros campos para que no solo aparezca el username, email, first name, last name  y staff status
+
+![assets/64.png](assets/64.png)
+
+y ademas darle un orden sobreescribiendo el `UserAdmin` con `list_display`
+
+```
+# Define a new User admin
+class UserAdmin(BaseUserAdmin):
+    """ Add profile admin to base user admin. """
+
+    inlines = (ProfileInline,)
+    list_display = (
+        'username',
+        'email',
+        'first_name', 
+        'last_name',
+        'is_active',
+        'is_staff'
+    )
+
+# Re-register UserAdmin
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
+```
+
+![assets/65.png](assets/65.png)
