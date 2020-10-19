@@ -32,7 +32,7 @@
 
 [Clase 16 Dashboard de Administración](#Clase-16-Dashboard-de-Administración)
 
-[]()
+[Clase 17 Creación del modelo de posts](#Clase-17-Creación-del-modelo-de-posts)
 
 []()
 
@@ -2182,3 +2182,91 @@ admin.site.register(User, UserAdmin)
 ```
 
 ![assets/65.png](assets/65.png)
+
+## Clase 17 Creación del modelo de posts
+
+Para reflejar los cambios en la base de datos, siempre que se crea o se edita un modelo debemos cancelar el server, ejecutar makemigrations, migrate y luego de nuevo volver a correr el servidor con runserver.
+
+Ahora en **posts/models.py** se agrega lo siguiente, importando base de datos y el modelo del usuario
+
+```
+# Django
+from django.db import models
+from django.contrib.auth.models import User
+
+
+class Post(models.Model):
+    """ Post model. """
+
+    user= models.ForeignKey(User, on_delete=models.CASCADE)
+    profile = models.ForeignKey('users.Profile', on_delete=models.CASCADE)
+
+    title = models.CharField(max_length=255)
+    photo = models.ImageField(upload_to='posts/photos')
+
+    created = models.DateTimeField(auto_now_add=True)
+    modified = models.DateTimeField(auto_now=True)
+
+
+    def __str__(self):
+        """ Return title and username. """
+        return '{} by @{}'.format(self.title, self.user.username)
+```      
+
+Ahora verificar que la base de datos se haya creado la cual se llamas **posts_post**
+
+![assets/66png](assets/66.png)
+
+Con respecto a las imágenes, Django por defecto no está hecho para servir la media, pero editando las urls logramos que se puedan mostrar. Para servir archivos de media, usamos `MEDIA_ROOT` y `MEDIA_URLS`, el cual se encuentra en la [documentacion](https://docs.djangoproject.com/en/3.1/ref/settings/#media-root).
+
+Ahora en el modulo de **urls.py** se debe importar static `from django.conf.urls.static import static` y esto lo que hace es que al final de los `urlpatterns` suma a static y da la url a traves de `settings.MEDIA_URL` y luego la ubicacion de la carpeta `document_root=settings.MEDIA_ROOT`, ademas de esto tambien se debe configurar los settings por lo que hay que importarlo en el archivo con `from django.conf import settings`
+
+```
+""" Platzigram URLs module. """
+
+#Django
+from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
+from django.urls import path
+
+from platzigram import views as local_views
+from posts import views as posts_views
+
+
+urlpatterns = [
+
+    path('admin/', admin.site.urls),
+
+    path('hello-world/', local_views.hello_world),
+    path('sorted/', local_views.sort_integers),
+    path('hi/<str:name>/<int:age>/', local_views.say_hi),
+    path('posts/', posts_views.list_posts),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
+y ahora hay que realizar la configuracion de los settings en el archivo **settings.py**
+
+debajo de `STATIC_URL`
+
+```
+STATIC_URL = '/static/'
+
+MEDIA_ROOT = (BASE_DIR/ 'media')
+
+MEDIA_URL = '/media/'
+```
+
+Esto lo que va a hacer es que cuando se corra nuevamente el servidor y se guarde una imagen automaticamente va a crear una carpeta llamada media en Platzigram que es la raiz del proyecto y va a permitir abrir las imagenes cuando en el navegador se seleccione
+
+esta es la ruta que esta configurada antes de incluir el path media
+
+![assets/67png](assets/67.png)
+
+ahora al seleccionar nuevamente una imagen se va a almacenar en **/media/users/pictures/nombredelaimagen**
+
+![assets/68png](assets/68.png)
+
+**Reto de la clase:**
+
+Crea el modelo de posts y regístralo en el admin.
