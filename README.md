@@ -36,7 +36,7 @@
 
 [Clase 18 Templates y archivos estáticos](#Clase-18-Templates-y-archivos-estáticos)
 
-[]()
+[Clase 19 Login](#Clase-19-Login)
 
 []()
 
@@ -2374,24 +2374,29 @@ dentro de **templates/users** crear otro archivo base que es para los usuarios e
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
     {% block head_content %}{% endblock %}
 
     {% load static %}
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.3/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+
 </head>
 <body class="h-100">
 
     <div class="container h-100">
-        <div class="row-h100 justify-content-center align-items-center">
-            <div class="col-sm-12 col-md-5 col-lg-5 pt-2 pl-5 pr-5 pb-5" id="auth-container" >
-                <img src="{% static "img/instagram.png" %}" class="img-fluid rounded mx-auto d-block pr-4" style="max-width: 60%;">
+        <div class="row h-100 justify-content-center align-items-center">
+            <div class="col-sm-12 col-md-5 col-lg-5 pt-2 pl-5 pr-5 pb-5" id="auth-container">
 
-                {% block content container%}{% endblock %}
-                
-            </div> 
+                <img src="{% static "img/instagram.png" %}" class="img-fluid rounded mx-auto d-block pb-4" style="max-width: 60%;">
+
+                {% block container %}{% endblock%}
+
+            </div>
         </div>
     </div>
-    
+
 </body>
 </html>
 ```
@@ -2468,3 +2473,263 @@ MEDIA_URL = '/media/'
 Terminando de configurar el folder static verificar que el servidor este corriendo de manera correcta, apagarlo y nuevamente prenderlo para aplicar cambios y despues recargar la pagina http://127.0.0.1:8000/posts/, se debe ver la presentacion de la siguiente forma, faltando algunas cosas por corregir.
 
 ![assets/70.png](assets/70.png)
+
+## Clase 19 Login
+
+El objetivo de esta es poder establecer la autorizacion para poder ingresar a feed a traves de login para esto hay que hacer uso del [sistema de autenticacion de Django](https://docs.djangoproject.com/en/3.1/topics/auth/default/#authentication-in-web-requests)
+
+A continuacion hay que empezar por crear la vista en **urls.py** para esto hay que importar las vistas de usuario que seria `from users import views as users_views` y debajo del path de posts crear el path de users login `path('users/login/', users_views.logn_view)`.
+
+Hasta el momento no se han nombrado las urls pero se pueden nombrar con una coma despues de la vista con `name=''`
+
+```
+""" Platzigram URLs module. """
+
+#Django
+from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
+from django.urls import path
+
+from platzigram import views as local_views
+from posts import views as posts_views
+from users import views as users_views
+
+
+urlpatterns = [
+
+    path('admin/', admin.site.urls),
+
+    path('hello-world/', local_views.hello_world, name='hello_world'),
+
+    path('sorted/', local_views.sort_integers, name='sort'),
+
+    path('hi/<str:name>/<int:age>/', local_views.say_hi, name='hi'),
+
+    path('posts/', posts_views.list_posts, name='feed'),
+
+    path('users/login/', users_views.login_view, name='login'),
+
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
+Ahora lo que hay que hacer es crear la vista que se acabe de indicar en la urls y empezar modificando **users/views.py**
+
+```
+""" Users views. """
+
+# Django
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render
+
+
+def login_view(request):
+    """ Login views """
+    return render(request, 'user/login.html')
+
+```
+
+y crear la vista de login en los templates de users la ruta es **Platzigram/templates/users/login.html**
+
+el action lleva un tag especial que es `{% url "login" %}`, es recomendable manejarlo de esta forma para que reconozca el name establecisto en urls.py `path('users/login/', users_views.login_view, name='login'),` si por ejempplo el path cambia de users/login a account/login, no va a ver necesidad de buscar rutas, si no que se va a cargar con el nombre establecido en el path
+
+```
+{% extends "users/base.html" %}
+
+{% block head_content %}
+<title>Platzigram sign in</title>
+{% endblock %}
+
+{% block container %}
+
+    <form method="POST" action="{% url "login" %}">
+
+        <input type="text" placeholder="Username" name="username">
+        <input type="password" placeholder=" Password" name="password">
+
+        <button type="submit">Sign in!</button>
+
+    </form>
+
+{% endblock %}
+```
+
+De momento la vista tiene que cargar de esta forma 
+
+![assets/71.png](assets/71.png)
+
+con esta vista al intentar autenticar sale un error **Forbidden (403) CSRF verification failed. Request aborted.** CSRF(Cross Site Request Forgery) este es un metodo que proporciona Django que protege de ataques CSRF. para ver mas sobre CSRF se puede consultar en esta [pagina](https://www.welivesecurity.com/la-es/2015/04/21/vulnerabilidad-cross-site-request-forgery-csrf/)
+
+para proteger la aplicacion se debe añadir el tag al login `{% csrf_token %}`
+
+```
+{% extends "users/base.html" %}
+
+{% block head_content %}
+<title>Platzigram sign in</title>
+{% endblock %}
+
+{% block container %}
+
+    <form method="POST" action="{% url "login" %}">
+        % csrf_token %}
+
+        <input type="text" placeholder="Username" name="username">
+        <input type="password" placeholder=" Password" name="password">
+
+        <button type="submit">Sign in!</button>
+
+    </form>
+
+{% endblock %}
+```
+
+Ahora para terminar de hacer la autenticacion en **users/views.py** se puede añadir la configuracion para autenticar como lo muestra la [pagina](https://docs.djangoproject.com/en/3.1/topics/auth/default/#authentication-in-web-requests)
+
+Se hace uso de un diccionario que despliega un error `{'error': 'Invalid username and password'}`, se hace un redireccion hacia post o el nombre que este configurado en urls en caso de que el usuario y contraseña esten validados `return redirect('feed')` para eso se importo el shorcuts redirect `from django.shortcuts import render, redirect`
+
+```
+""" Users views. """
+
+# Django
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
+
+
+def login_view(request):
+    """ Login views """
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return redirect('feed')
+        else:
+            return render(request, 'users/login.html', {'error': 'Invalid username and password'})
+
+    return render(request, 'users/login.html')
+```
+
+Despúes de realizar la autenticacion de manera correcta con cada usuario de http://127.0.0.1:8000/users/login/ debe redirigir a http://127.0.0.1:8000/post/. Sin embargo hasta el momento si existe una mala autenticacion solamente redirige a login pero no muestra el error, para hacerlo nuevamente hay que incluir en la vista de login **Platzigram/templates/users/login.html**
+
+```
+{% extends "users/base.html" %}
+
+{% block head_content %}
+<title>Platzigram sign in</title>
+{% endblock %}
+
+{% block container %}
+
+    {% if error %}
+        <p style="color: red;"> {{ error }} </p>
+    {% endif %}
+
+    <form method="POST" action="{% url "login" %}">
+        {% csrf_token %}
+
+        <input type="text" placeholder="Username" name="username">
+        <input type="password" placeholder=" Password" name="password">
+
+        <button type="submit">Sign in!</button>
+
+    </form>
+
+{% endblock %}
+```
+
+realizando esta modificacion al autenticar mal se va a mostrar en el navegador el mensaje **'Invalid username and password'**
+
+![assets/72.png](assets/72.png)
+
+lo ultimo que falta hacer es que no se pueda entrar a feed si no esta posts, es decir no se permita ingresar directamente a los posts hasta que no se autentique realmente para eso existe un decorador [The login_required decorator](https://docs.djangoproject.com/en/3.1/topics/auth/default/#the-login-required-decorator), que lo que hace es agregar el decorador arriba de una funcion y en la documentacion se indica que si el valor ha sido logueado va a redirigir a **settings.LOGIN:URL**
+
+y esto se debe implementar en la vista de **posts** es decir **Platzigram/posts/views.py**, se debe importar `from django.contrib.auth.decorators import login_required` y agregar el decorador de Python antes de la funcion `@login_required`
+
+```
+"""Post views.  """
+
+# Django
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+
+# Utilities
+from datetime import datetime
+
+
+posts=[
+    {
+        'title': 'Mont Blanck',
+        'user': {
+            'name': 'Jeyfred Calderon',
+            'picture': 'https://lh3.googleusercontent.com/ogw/ADGmqu9Rq5ukqaEtLja_pDNAyZJq7qMy3YTdwSEEdhXF=s32-c-mo',
+        },
+        'timestamp' : datetime.now().strftime('%b %dth, %Y - %H:%M hrs'),
+        'photo': 'https://picsum.photos/800/600?image=1036',
+    },
+    {
+        'title': 'Via Láctea',
+        'user': {
+            'name': 'Christian Van der Henst',
+            'picture': 'https://picsum.photos/60/60?image=1005',
+        },
+        'timestamp' : datetime.now().strftime('%b %dth, %Y - %H:%M hrs'),
+        'photo': 'https://picsum.photos/800/800?image=903',
+    },
+    {
+        'title': 'Nuevo auditorio',
+        'user': {
+            'name': 'Uriel (Thespianartist)',
+            'picture': 'https://picsum.photos/60/60?image=883',
+        },
+        'timestamp' : datetime.now().strftime('%b %dth, %Y - %H:%M hrs'),
+        'photo': 'https://picsum.photos/500/700?image=1076',
+    },
+]
+
+@login_required
+def list_posts(request):
+    """ List existing posts. """
+    return render(request, 'posts/feed.html', {'posts': posts})
+
+```
+
+y por ultimo configurar en el archivo **settings.py** a `LOGIN_URL='/useres/login/'`
+
+```
+
+# Internationalization
+# https://docs.djangoproject.com/en/3.1/topics/i18n/
+
+LANGUAGE_CODE = 'en-us'
+
+TIME_ZONE = 'UTC'
+
+USE_I18N = True
+
+USE_L10N = True
+
+USE_TZ = True
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/3.1/howto/static-files/
+
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [BASE_DIR/ 'static']
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+
+MEDIA_ROOT = (BASE_DIR/ 'media')
+
+MEDIA_URL = '/media/'
+
+LOGIN_URL = '/users/login/'
+```
+
+de esta forma no se tendra acceso directo a posts sin antes estar autenticado desde una pestaña de incognito y la va a redirigir a login, tener en cuenta que si quiere probar sin estar en incognito se debe borrar la cache del navegador para que no guarde al usuario
