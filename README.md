@@ -2444,7 +2444,7 @@ El concepto de archivos estáticos en Django, son archivos que se usan a través
 
 En el folder Platzigram que es la raiz del proyecto crear un folder que se llame **static** y dentro de static crear otro folder que se llame **css** y otro aparte que se llame **img**
 
-copiar los archivos del repositorio alli en cada una de sus carpetas
+copiar los archivos del [repositorio](https://github.com/jeyfredc/Proyecto-Platzigram-Django/tree/master/static) alli en cada una de sus carpetas
 
 Para servir archivos estáticos, nos apoyamos en STATIC_ROOT y STATIC_URLS. el cual encontramos en la [documentacion](https://docs.djangoproject.com/en/3.1/ref/settings/#std:setting-STATICFILES_DIRS)
 
