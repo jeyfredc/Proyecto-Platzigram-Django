@@ -2303,7 +2303,7 @@ y ahora el archivo feed que se encuentra en **posts/templates/feed.html** se mue
 
 y a continuacion en **Platzigram/templates** se crea una vista o modelo base que va a compartir con **posts** y **users** la cual se va a llamar **base.html**
 
-``
+```
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2328,11 +2328,11 @@ y a continuacion en **Platzigram/templates** se crea una vista o modelo base que
 
 </body>
 </html>
-``
+```
 
 Ahora tambien se crea otro archivo que va a ser compartido que es **nav.html**
 
-``
+```
 {% load static %}
 <nav class="navbar navbar-expand-lg fixed-top" id="main-navbar">
     <div class="container">
@@ -2366,11 +2366,11 @@ Ahora tambien se crea otro archivo que va a ser compartido que es **nav.html**
         </div>
     </div>
 </nav>
-``
+```
 
 dentro de **templates/users** crear otro archivo base que es para los usuarios el cual tambien se llamara **base.html**
 
-``
+```
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2394,7 +2394,7 @@ dentro de **templates/users** crear otro archivo base que es para los usuarios e
     
 </body>
 </html>
-``
+```
 
 Despues de realizar esto verificar que el servidor este corriendo correctamente
 
@@ -2434,11 +2434,11 @@ Al recargar la pagina http://127.0.0.1:8000/posts/ no se va a ver como antes
 
 porque hace falta cargar los archivos estaticos que estan en **templates/base.html**
 
-``
+```
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v.5.1.0/css/all.css" crossorigin="anonymous" /> 
     <link rel="stylesheet" href="{% static 'css/main.css' %}" /> 
-``
+```
 
 El concepto de archivos estáticos en Django, son archivos que se usan a través de la aplicación para pintar los datos. Pueden ser archivos de imagen, audio y video, o archivos css y scripts js.
 
@@ -2449,7 +2449,8 @@ copiar los archivos del repositorio alli en cada una de sus carpetas
 Para servir archivos estáticos, nos apoyamos en STATIC_ROOT y STATIC_URLS. el cual encontramos en la [documentacion](https://docs.djangoproject.com/en/3.1/ref/settings/#std:setting-STATICFILES_DIRS)
 
 Abrir **settings.py** y dejar los archivos estaticos de la siguiente forma
-``
+
+```
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [BASE_DIR/ 'static']
@@ -2462,7 +2463,7 @@ STATICFILES_FINDERS = [
 MEDIA_ROOT = (BASE_DIR/ 'media')
 
 MEDIA_URL = '/media/'
-``
+```
 
 Terminando de configurar el folder static verificar que el servidor este corriendo de manera correcta, apagarlo y nuevamente prenderlo para aplicar cambios y despues recargar la pagina http://127.0.0.1:8000/posts/, se debe ver la presentacion de la siguiente forma, faltando algunas cosas por corregir.
 
