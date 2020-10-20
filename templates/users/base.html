@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head_content %}{% endblock %}
+
+    {% load static %}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.3/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+</head>
+<body class="h-100">
+
+    <div class="container h-100">
+        <div class="row-h100 justify-content-center align-items-center">
+            <div class="col-sm-12 col-md-5 col-lg-5 pt-2 pl-5 pr-5 pb-5" id="auth-container" >
+                <img src="{% static "img/instagram.png" %}" class="img-fluid rounded mx-auto d-block pr-4" style="max-width: 60%;">
+
+                {% block content container%}{% endblock %}
+                
+            </div> 
+        </div>
+    </div>
+    
+</body>
+</html>

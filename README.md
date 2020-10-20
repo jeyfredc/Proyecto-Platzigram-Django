@@ -34,7 +34,7 @@
 
 [Clase 17 Creación del modelo de posts](#Clase-17-Creación-del-modelo-de-posts)
 
-[]()
+[Clase 18 Templates y archivos estáticos](#Clase-18-Templates-y-archivos-estáticos)
 
 []()
 
@@ -1125,7 +1125,7 @@ DATABASES = {
 
 El Modelo en Django usa diferentes opciones para conectarse a múltiples bases de datos relacionales, entre las que se encuentran: SQLite, PostgreSQL, Oracle y MySQL.
 
-Para revisarlo como se configura con otra vase de datos debemos revisar en la parte de [DATABASES ENGINE](https://docs.djangoproject.com/en/3.1/ref/settings/#databases) ENGINE especifica el sistema de base de datos con el que vamos a estar trabajando. 
+Para revisarlo como se configura con otra base de datos debemos revisar en la parte de [DATABASES ENGINE](https://docs.djangoproject.com/en/3.1/ref/settings/#databases) especifica el sistema de base de datos con el que vamos a estar trabajando. 
 
 Pero si queremos trabajar con Postgresql o Mysql toca configurar el `HOST` que es la ubicacion de la base de datos donde esta corriendo.
 
@@ -1287,7 +1287,7 @@ y por ultimo si encender el servidor
 
 `python3 manage.py runserver`
 
-tambien se puede verificar que el campo de halla actualizado en DB Browser for sqlite y ademas al agregar este nuevo campo la terminal nos indica que creo un nuevo archivo en **posts/migrations/0002_user_is_admin.py**
+tambien se puede verificar que el campo de haya actualizado en DB Browser for sqlite y ademas al agregar este nuevo campo la terminal nos indica que creo un nuevo archivo en **posts/migrations/0002_user_is_admin.py**
 
 ___
 
@@ -2215,7 +2215,7 @@ class Post(models.Model):
 
 Ahora verificar que la base de datos se haya creado la cual se llamas **posts_post**
 
-![assets/66png](assets/66.png)
+![assets/66.png](assets/66.png)
 
 Con respecto a las imágenes, Django por defecto no está hecho para servir la media, pero editando las urls logramos que se puedan mostrar. Para servir archivos de media, usamos `MEDIA_ROOT` y `MEDIA_URLS`, el cual se encuentra en la [documentacion](https://docs.djangoproject.com/en/3.1/ref/settings/#media-root).
 
@@ -2261,12 +2261,209 @@ Esto lo que va a hacer es que cuando se corra nuevamente el servidor y se guarde
 
 esta es la ruta que esta configurada antes de incluir el path media
 
-![assets/67png](assets/67.png)
+![assets/67.png](assets/67.png)
 
 ahora al seleccionar nuevamente una imagen se va a almacenar en **/media/users/pictures/nombredelaimagen**
 
-![assets/68png](assets/68.png)
+![assets/68.png](assets/68.png)
 
 **Reto de la clase:**
 
 Crea el modelo de posts y regístralo en el admin.
+
+## Clase 18 Templates y archivos estáticos
+
+Los templates quedarán definidos en un nuevo folder que llamaremos /templates/.
+
+despues de crear el folder hay que hacer la configuracion en **settings.py** donde estan los directorios de `TEMPLATES` que es `'DIRS'` y alli indicar que templates va a ser el directorio de estos
+
+```
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR/ 'templates'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+```
+
+dentro del folder **templates** crear un folder que llame **users** y otro que llame **posts**
+
+en el archivo de las vistas **posts/views.py** reemplazar `return render(request, 'feed.html', {'posts': posts})` por `return render(request, 'posts/feed.html', {'posts': posts})`
+
+y ahora el archivo feed que se encuentra en **posts/templates/feed.html** se mueve a **Platzigram/templates/posts** y se elimina el folder templates de **posts**
+
+y a continuacion en **Platzigram/templates** se crea una vista o modelo base que va a compartir con **posts** y **users** la cual se va a llamar **base.html**
+
+``
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% block head_content %}{% endblock %}
+
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+
+</head>
+<body>
+
+    {% include "nav.html" %}
+
+    <div class="container mt-5">
+        {% block container %}
+        {% endblock%}
+    </div>
+
+</body>
+</html>
+``
+
+Ahora tambien se crea otro archivo que va a ser compartido que es **nav.html**
+
+``
+{% load static %}
+<nav class="navbar navbar-expand-lg fixed-top" id="main-navbar">
+    <div class="container">
+
+        <a class="navbar-brand pr-5" style="border-right: 1px solid #efefef;" href="">
+            <img src="{% static "img/instagram.png" %}" height="45" class="d-inline-block align-top"/>
+        </a>
+
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav mr-auto">
+
+                <li class="nav-item">
+                    <a href="">
+                        <img src="{% static 'img/default-profile.png' %}" height="35" class="d-inline-block align-top rounded-circle"/>
+                    </a>
+                </li>
+
+                <li class="nav-item nav-icon">
+                    <a href="">
+                        <i class="fas fa-plus"></i>
+                    </a>
+                </li>
+
+                <li class="nav-item nav-icon">
+                    <a href="">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+</nav>
+``
+
+dentro de **templates/users** crear otro archivo base que es para los usuarios el cual tambien se llamara **base.html**
+
+``
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head_content %}{% endblock %}
+
+    {% load static %}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.3/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+</head>
+<body class="h-100">
+
+    <div class="container h-100">
+        <div class="row-h100 justify-content-center align-items-center">
+            <div class="col-sm-12 col-md-5 col-lg-5 pt-2 pl-5 pr-5 pb-5" id="auth-container" >
+                <img src="{% static "img/instagram.png" %}" class="img-fluid rounded mx-auto d-block pr-4" style="max-width: 60%;">
+
+                {% block content container%}{% endblock %}
+                
+            </div> 
+        </div>
+    </div>
+    
+</body>
+</html>
+``
+
+Despues de realizar esto verificar que el servidor este corriendo correctamente
+
+ahora lo que se quiere hacer es que **templates/posts/feed.html** herede de **templates/base.html**, **feed.html** queda de la siguiente forma
+
+para que feed pueda heredar se van a eliminar algunas cosas del archivo y mediante la sintaxis `{% extends "base.html" %}` y luego `{% block head_content %}` para agregar el titulo o cabecera, todo bloque se debe cerrar con `{% endblock %}` despues dentro de `{% block container %}` va todo el contenido que ira en la pagina
+
+```
+{% extends "base.html" %}
+
+{% block head_content %}
+<title>Platzigram feed</title>
+{% endblock %}
+
+{% block container %}
+    <div class="row">
+        {% for post in posts %}
+        <div class="col-lg-4 offset-lg-4">
+            <div class="media">
+                <img class="mr-3 rounded-circle" src="{{ post.user.picture }}" alt="{{ post.user.name }}">
+                <div class="media-body">
+                    <h5 class="mt-0">{{ post.user.name }}</h5>
+                    {{ post.timestamp }}
+                </div>
+            </div>
+            <img class="img-fluid mt-3 border rounded" src="{{ post.photo }}" alt="{{ post.title }}">
+            <h6 class="ml-1 mt-1">{{ post.title }}</h6>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+```
+
+Al recargar la pagina http://127.0.0.1:8000/posts/ no se va a ver como antes 
+
+![assets/69.png](assets/69.png)
+
+porque hace falta cargar los archivos estaticos que estan en **templates/base.html**
+
+``
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v.5.1.0/css/all.css" crossorigin="anonymous" /> 
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" /> 
+``
+
+El concepto de archivos estáticos en Django, son archivos que se usan a través de la aplicación para pintar los datos. Pueden ser archivos de imagen, audio y video, o archivos css y scripts js.
+
+En el folder Platzigram que es la raiz del proyecto crear un folder que se llame **static** y dentro de static crear otro folder que se llame **css** y otro aparte que se llame **img**
+
+copiar los archivos del repositorio alli en cada una de sus carpetas
+
+Para servir archivos estáticos, nos apoyamos en STATIC_ROOT y STATIC_URLS. el cual encontramos en la [documentacion](https://docs.djangoproject.com/en/3.1/ref/settings/#std:setting-STATICFILES_DIRS)
+
+Abrir **settings.py** y dejar los archivos estaticos de la siguiente forma
+``
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [BASE_DIR/ 'static']
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+
+MEDIA_ROOT = (BASE_DIR/ 'media')
+
+MEDIA_URL = '/media/'
+``
+
+Terminando de configurar el folder static verificar que el servidor este corriendo de manera correcta, apagarlo y nuevamente prenderlo para aplicar cambios y despues recargar la pagina http://127.0.0.1:8000/posts/, se debe ver la presentacion de la siguiente forma, faltando algunas cosas por corregir.
+
+![assets/70.png](assets/70.png)
