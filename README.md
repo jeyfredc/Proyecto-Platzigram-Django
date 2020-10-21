@@ -40,7 +40,7 @@
 
 [Clase 20 Logout](#Clase-20-Logout)
 
-[]()
+[Clase 21 Signup](#Clase-21-Signup)
 
 []()
 
@@ -2779,7 +2779,7 @@ se debe crear otra vista en las urls.py debajo del path login
 
 `path('users/logout/', users_views.logout_view, name='logout'),`
 
-y despues pasar a crear la vista en **Platzigram/users/views.py**
+y despues pasar a crear la funcion en **Platzigram/users/views.py**
 
 se debe importar logout `from django.contrib.auth import authenticate, login, logout`, tambien es recomendable utilizar login_required `from django.contrib.auth.decorators import login_required` y luego crear la funcion para hacer un redirect hacia el login cuando el usuario finalice la sesion con la funcion `def logout_view(request):`
 
@@ -2840,3 +2840,245 @@ despues de guardar este cambio nuevamente hacer click sobre el icono
 y de esta forma va a redirigir a login
 
 ![assets/73.png](assets/73.png)
+
+## Clase 21 Signup
+
+Crearemos el Registro de usuario a partir de la clase perfil, por lo que usaremos un formulario personalizado. Definiremos un nuevo Template para el formulario. Dejaremos que el browser se encargue de las validaciones generales. Sólo validaremos en python la coincidencia entre password y confirmación del password. Incluiremos una validación con try/catch para evitar que se dupliquen usuarios con mismo nombre.
+
+Empezando hay que crear la url en **urls.py** para despues pasar a crear la funcion y la vista de creacion de usuarios
+
+agregando el otro path
+
+`path('users/signup/', users_views.signup_view, name='signup'),`
+
+Crear la funcion en **Platzigram/users/views.py** para ir rendereando o cargando la pagina para ir viendo como esta quedando
+
+```
+def signup_view(request):
+    """ Sign up view """
+    return render(request, 'users/signup.html')
+```
+
+Crear la vista **signup.html** en **Platzigram/templates/users/signup.html**
+
+```
+{% extends "users/base.html" %}
+
+{% block head_content %}
+<title>Platzigram sign up</title>
+{% endblock %}
+
+{% block container %}
+
+    <form action="{% url "signup" %}" method="POST">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <input type="text" class="form-control" placeholder="Username" name="username" required="true" />
+        </div>
+
+        <div class="form-group">
+            <input type="password" class="form-control" placeholder="Password" name="password" required="true" />
+        </div>
+
+        <div class="form-group">
+            <input type="password" class="form-control" placeholder="Password confirmation" name="password_confirmation" required="true" />
+        </div>
+
+        <div class="form-group">
+            <input type="text" class="form-control" placeholder="First name" name="first_name" required="true" />
+        </div>
+
+        <div class="form-group">
+            <input type="text" class="form-control" placeholder="Last name" name="last_name" required="true" />
+        </div>
+
+        <div class="form-group">
+            <input type="email" class="form-control" placeholder="Email address" name="email" required="true" />
+        </div>
+
+        <button class="btn btn-primary btn-block mt-5" type="submit">Register!</button>
+
+    </form>
+    
+{% endblock %}
+```
+
+Al cargar la pagina en http://127.0.0.1:8000/users/signup/ se vera lo siguiente 
+
+![assets/75.png](assets/75.png)
+
+Para implementar la creacion de usuario despues de probar la vista, se consulta en la [documentacion](https://docs.djangoproject.com/en/3.1/topics/auth/default/#creating-users) y en **Platzigram/users/views.py** se empieza a añadir la logica en la funcion `signup_view`, lo primero que se debe hacer es importar `from django.contrib.auth.models import User` y empezar a añadir una logica parecida a la del login que indica que si hace post de username, password y password_confirmation entonces cree al usuario pero ademas se añade una validacion indicando que el password y el password_confirmation sean iguales para continuar con las validaciones.
+
+Tambien hay que importar a Profile para incluirlo en el perfil de la aplicacion con todos los atributos basicos que se requieren aunque no es necesario implementarlos. primero se importa el modelo `from users.models import Profile` despues de grabar al usuario, se graba el perfil y por ultimo hay una redireccion al login y en caso de que no redirige a signup
+
+```
+""" Users views. """
+
+# Django
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+
+from django.contrib.auth.models import User
+from users.models import Profile
+
+
+def login_view(request):
+    """ Login view """
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return redirect('feed')
+        else:
+            return render(request, 'users/login.html', {'error': 'Invalid username and password'})
+            
+    return render(request, 'users/login.html')
+
+
+def signup_view(request):
+    """ Sign up view """
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        password_confirmation = request.POST['password_confirmation']
+
+        if password != password_confirmation:
+            return render(request, 'users/signup.html', {'error': 'Password confirmation does not match'})
+
+        user = User.objects.create_user(username=username, password=password)
+        user.first_name = request.POST['first_name']
+        user.last_name = request.POST['last_name']
+        user.email = request.POST['email']
+        user.save()
+
+        profile = Profile(user=user)
+        profile.save()
+
+        return redirect('login')
+
+
+    return render(request, 'users/signup.html')
+
+
+@login_required
+def logout_view(request):
+    """ Logout a user """
+    logout(request)
+    # Redirect to a success page.
+    return redirect('login')
+```    
+
+Hasta el momento confirmar que la pagina siga funcionando de la misma forma y en caso de que si pasar a la vista **Platzigram/templates/users/signup.html** y hacer la validacion del error 
+
+```
+{% extends "users/base.html" %}
+
+{% block head_content %}
+<title>Platzigram sign up</title>
+{% endblock %}
+
+{% block container %}
+
+    <form action="{% url "signup" %}" method="POST">
+        {% csrf_token %}
+
+        {% if error %}
+        <p class="alert alert-danger"> {{ error }} </p>
+        {% endif %}
+
+        <div class="form-group">
+            <input type="text" class="form-control" placeholder="Username" name="username" required="true" />
+        </div>
+
+        <div class="form-group">
+            <input type="password" class="form-control" placeholder="Password" name="password" required="true" />
+        </div>
+
+        <div class="form-group">
+            <input type="password" class="form-control" placeholder="Password confirmation" name="password_confirmation" required="true" />
+        </div>
+
+        <div class="form-group">
+            <input type="text" class="form-control" placeholder="First name" name="first_name" required="true" />
+        </div>
+
+        <div class="form-group">
+            <input type="text" class="form-control" placeholder="Last name" name="last_name" required="true" />
+        </div>
+
+        <div class="form-group">
+            <input type="email" class="form-control" placeholder="Email address" name="email" required="true" />
+        </div>
+
+        <button class="btn btn-primary btn-block mt-5" type="submit">Register!</button>
+
+    </form>
+    
+{% endblock %}
+```
+
+Para confirmar que se este implementado el mensaje de error colocar mal las contraseñas 
+
+![assets/76.png](assets/76.png)
+
+Ahora nuevamente confirmar de manera correcta las contraseñas, hacer el registro
+
+![assets/77.png](assets/77.png)
+
+luego va hacer la redireccion a login y despues confirmar en login que se pueda ingresar a posts
+
+![assets/78.png](assets/78.png)
+
+![assets/79.png](assets/79.png)
+
+Otra forma de verificar que el usuario y el perfil esten creados es dirigiendo al admin en http://127.0.0.1:8000/admin/ 
+
+![assets/80.png](assets/80.png)
+
+falta hacer una validacion y es la del username, creando uno igual en signup, al hacer esto sale un mensaje de error **UNIQUE**
+
+![assets/81.png](assets/81.png)
+
+la consola tambien indica que tipo de error se esta arrojando y es el que se debe capturar para corregir 
+
+![assets/82.png](assets/82.png)
+
+hay que agregar un try/except en **Platzigram/users/views.py**, importar el error con `from django.db.utils import IntegrityError` y luego caprturar el error incluyendo un mensaje de error 
+
+```
+def signup_view(request):
+    """ Sign up view """
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        password_confirmation = request.POST['password_confirmation']
+
+        if password != password_confirmation:
+            return render(request, 'users/signup.html', {'error': 'Password confirmation does not match'})
+            
+        try:
+            user = User.objects.create_user(username=username, password=password)
+        except IntegrityError:
+            return render(request, 'users/signup.html', {'error': 'Username is already in user'})
+
+        user.first_name = request.POST['first_name']
+        user.last_name = request.POST['last_name']
+        user.email = request.POST['email']
+        user.save()
+
+        profile = Profile(user=user)
+        profile.save()
+
+        return redirect('login')
+
+
+    return render(request, 'users/signup.html')
+```
+
+Nuevamente intentar crear un usuario que ya exista en base de datos y de esta forma aparecera el nuevo mensaje de error configurado
+
+![assets/83.png](assets/83.png)
