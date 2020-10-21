@@ -37,7 +37,7 @@ def signup_view(request):
 
         if password != password_confirmation:
             return render(request, 'users/signup.html', {'error': 'Password confirmation does not match'})
-            
+
         try:
             user = User.objects.create_user(username=username, password=password)
         except IntegrityError:
@@ -55,6 +55,12 @@ def signup_view(request):
 
 
     return render(request, 'users/signup.html')
+
+
+@login_required
+def update_profile(request):
+    """ Update a user's profile view. """
+    return render(request, 'users/update_profile.html')
 
 
 @login_required

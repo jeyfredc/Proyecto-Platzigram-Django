@@ -42,7 +42,7 @@
 
 [Clase 21 Signup](#Clase-21-Signup)
 
-[]()
+[Clase 22 Middlewares](#Clase-22-Middlewares)
 
 []()
 
@@ -3082,3 +3082,123 @@ def signup_view(request):
 Nuevamente intentar crear un usuario que ya exista en base de datos y de esta forma aparecera el nuevo mensaje de error configurado
 
 ![assets/83.png](assets/83.png)
+
+## Clase 22 Middlewares
+
+Un middleware en Django es una serie de hooks y una API de bajo nivel que nos permiten modificar el objeto request antes de que llegue a la vista y response antes de que salga de la vista, la definicion de Middlewares se puede encontrar en la [documentacion](https://docs.djangoproject.com/en/3.1/topics/http/middleware/)
+
+Django dispone de los siguientes middlewares por defecto en el archivo **settins.py**:
+
+- **SecurityMiddleware:** Se encarga de comprobar todas las medidas de seguridad, las variables de settings relacionadas con Https, Auth, entre otros.
+
+- **SessionMiddleware:** Se encarga de validar una sesión.
+
+- **CommonMiddleware:** Se encarga de verificar componentes comunes como lo es el debug.
+
+- **CsrfViewMiddleware:** Éste nos permite utilizar el tag {% csrf_token %} y es el que inserta el token de seguridad en cada formulario.
+
+- **AuthenticationMiddleware:** Nos permite agregar request.user desde las vistas.
+
+- **MessageMiddleware:** Pertenece al Framework de mensajes de Django, y permite pasar un mensaje sin necesidad de mantener un estado en la base de datos o en memoria.
+
+- **XFrameOptionsMiddleware:** Middleware de seguridad.
+
+Crearemos un middleware para redireccionar al usuario al perfil para que actualice su información cuando no haya definido aún biografía o avatar.
+
+Crear la url en **urls.py** para despues pasar a crear la funcion y la vista de actualizacion de datos
+
+```
+    path('users/me/profile/', users_views.update_profile, name='update_profile'),
+```
+
+Crear la funcion en **Platzigram/users/views.py** para ir rendereando o cargando la pagina para ir viendo como esta quedando
+
+```
+def update_profile(request):
+    """ Update a user's profile view. """
+    return render(request, 'users/update_profile.html')
+```
+
+Crear la vista **update_profile.html** en **Platzigram/templates/users/update_profile.html**
+
+```
+{% extends "base.html"%}
+
+{% block head_content %}
+
+<title>@{{ request.user.username}} | Update profile</title>
+
+{% endblock %}
+
+{% block container %}
+
+    <h1 class="mt-5">@{{ request.user.username}} </h1>
+
+{% endblock %}
+```
+
+verificar y cargar la vista, primero hay que iniciar con algun usuario registrado en base y luego si redireccionar a http://127.0.0.1:8000/users/me/profile/
+
+![assets/84.png](assets/84.png)
+
+Ahora se va a crear el middleware directamente en platzigram y se va a llamar **middleware.py**
+
+lo primero que se hace es inicializar una clase como lo indica la documentacion y se crean los metodos init y call, en el metodo call debe ir la logica del middleware donde existen varias condiciones.
+
+La primera es que si el usuario es anonimo no puede ingresar a la aplicacion y que para eso el perfil debe estar autenticado.
+
+La segunda es que si el perfil aun no tiene creada una imagen y biografia tampoco puede redirigir hacia ningun lado para ello tambien se importa redirect para redirigir la pagina hacia update_profile y se importa reverse para que cuando el usuario haga click sobre el icono de logout pueda salir de la aplicacion 
+
+```
+"""Platzigram middleware catalog. """
+
+# Django
+
+
+from django.urls import reverse
+
+
+class ProfileCompletionMiddleware:
+    """ Profile completion middleware.
+    
+    Ensure every user that is interacting with the plataform
+    have their profile picture and biography.
+    """
+
+    def __init__(self, get_response):
+        """ Middleware initialization. """
+        self.get_response = get_response
+
+    
+    def __call__(self, request):
+        """ Code to be executed for each request before the view is called. """
+        if not request.user.is_anonymous:
+            profile = request.user.profile
+            if not profile.picture or not profile.biography:
+                if request.path not in [reverse('update_profile'), reverse('logout')]:
+                    return redirect('update_profile')
+
+        
+        response = self.get_response(request)
+        return response
+```
+
+Posteriormente hay que realizar la instalacion del middleware en **settings.py**, para esto hay que buscar la variable **MIDDLEWARE = [** y alli agregar el que se acaba de configurar  que es     `'platzigram.middleware.ProfileCompletionMiddleware',`
+
+```
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'platzigram.middleware.ProfileCompletionMiddleware',
+
+]
+```
+
+Despues de realizar esto si se loguea con un usuario que no tenga imagen o biografia solamente se va a redirigir a http://127.0.0.1:8000/users/me/profile/ y solamente se podra hacer logout.
+
+![assets/85.png](assets/85.png)
