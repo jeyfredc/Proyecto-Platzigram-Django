@@ -38,7 +38,7 @@
 
 [Clase 19 Login](#Clase-19-Login)
 
-[]()
+[Clase 20 Logout](#Clase-20-Logout)
 
 []()
 
@@ -2733,3 +2733,110 @@ LOGIN_URL = '/users/login/'
 ```
 
 de esta forma no se tendra acceso directo a posts sin antes estar autenticado desde una pestaña de incognito y la va a redirigir a login, tener en cuenta que si quiere probar sin estar en incognito se debe borrar la cache del navegador para que no guarde al usuario
+
+## Clase 20 Logout
+
+Completaremos el flujo de autenticación del usuario que iniciamos en la clase anterior agregando la funcionalidad de Logout. Ademas incorporamos algo de estilos al formulario de Login.
+
+Abrir el archivo **Platzigram/templates/users/login.html** para agregar estilos de bootstrap en el alert y cambiar los estilos del formulario para el login
+
+```
+{% extends "users/base.html" %}
+
+{% block head_content %}
+<title>Platzigram sign in</title>
+{% endblock %}
+
+{% block container %}
+
+    {% if error %}
+        <p class="alert alert-danger">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" action="{% url "login" %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <input class="form-control" type="text" placeholder="Username" name="username">
+        </div>
+
+        <div class="form-group">
+            <input class="form-control" type="password" placeholder=" Password" name="password"">
+        </div>
+
+        <button class="btn btn-primary btn-block mt-5" type="submit">Sign in!</button>
+
+    </form>
+
+{% endblock %}
+```
+
+![assets/73.png](assets/73.png)
+
+Para hacer el Logout se consulta la [documentacion](https://docs.djangoproject.com/en/3.1/topics/auth/default/#how-to-log-a-user-out)
+
+se debe crear otra vista en las urls.py debajo del path login 
+
+`path('users/logout/', users_views.logout_view, name='logout'),`
+
+y despues pasar a crear la vista en **Platzigram/users/views.py**
+
+se debe importar logout `from django.contrib.auth import authenticate, login, logout`, tambien es recomendable utilizar login_required `from django.contrib.auth.decorators import login_required` y luego crear la funcion para hacer un redirect hacia el login cuando el usuario finalice la sesion con la funcion `def logout_view(request):`
+
+```
+""" Users views. """
+
+# Django
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+
+
+def login_view(request):
+    """ Login view """
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return redirect('feed')
+        else:
+            return render(request, 'users/login.html', {'error': 'Invalid username and password'})
+            
+    return render(request, 'users/login.html')
+
+
+@login_required
+def logout_view(request):
+    """ Logout a user """
+    logout(request)
+    # Redirect to a success page.
+    return redirect('login')
+```    
+
+Para probarlo en el navegador ir directamente hacia logout http://127.0.0.1:8000/users/logout/ y para comprobar que no se puede ingresar a post colocar directamente http://127.0.0.1:8000/posts/, esto va a redireccionar hacia el login.
+
+Lo unico que falta despues de ingresar con una sesion correctamente, es que el icono de salida funcione como logout
+
+![assets/74.png](assets/74.png)
+
+para que este icono funcione hay que abrir **Platzigram/templates/nav.html**
+
+y en la parte del icono `sign-out` redirigir a la url
+
+```
+                <li class="nav-item nav-icon">
+                    <a href="{% url "logout" %}">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </li>
+```                
+
+despues de guardar este cambio nuevamente hacer click sobre el icono 
+
+![assets/74.png](assets/74.png)
+
+y de esta forma va a redirigir a login
+
+![assets/73.png](assets/73.png)

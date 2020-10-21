@@ -7,16 +7,21 @@
 {% block container %}
 
     {% if error %}
-        <p style="color: red;"> {{ error }} </p>
+        <p class="alert alert-danger"> {{ error }} </p>
     {% endif %}
 
     <form method="POST" action="{% url "login" %}">
         {% csrf_token %}
 
-        <input type="text" placeholder="Username" name="username">
-        <input type="password" placeholder=" Password" name="password">
+        <div class="form-group">
+            <input class="form-control" type="text" placeholder="Username" name="username">
+        </div>
 
-        <button type="submit">Sign in!</button>
+        <div class="form-group">
+            <input class="form-control" type="password" placeholder=" Password" name="password"">
+        </div>
+
+        <button class="btn btn-primary btn-block mt-5" type="submit">Sign in!</button>
 
     </form>
 
