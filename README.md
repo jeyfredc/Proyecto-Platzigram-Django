@@ -4020,7 +4020,7 @@ El template **feed.html** que se encuentra en **Platzigram/templates/posts/feed.
 {% endblock %}
 ```
 
-Finalmente el post que se realizo y cargo en base de datos ya esta cargando en la pagina principal
+Finalmente el post que se realizo y cargo en base de datos ya esta cargando en la pagina principal.
 
 ![assets/107.png](assets/107.png)
 
