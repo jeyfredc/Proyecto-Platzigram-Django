@@ -3173,14 +3173,11 @@ class ProfileCompletionMiddleware:
     def __call__(self, request):
         """ Code to be executed for each request before the view is called. """
         if not request.user.is_anonymous:
-            profile = request.user.profile
-            if not profile.picture or not profile.biography:
-                if request.path not in [reverse('update_profile'), reverse('logout')]:
-                    return redirect('update_profile')
-
-        
-        response = self.get_response(request)
-        return response
+            if not request.user.is_staff:
+                profile = request.user.profile
+                if not profile.picture or not profile.biography:
+                    if request.path not in [reverse('update_profile'), reverse('logout')]:
+                        return redirect('update_profile')
 ```
 
 Posteriormente hay que realizar la instalacion del middleware en **settings.py**, para esto hay que buscar la variable **MIDDLEWARE = [** y alli agregar el que se acaba de configurar  que es     `'platzigram.middleware.ProfileCompletionMiddleware',`
@@ -3202,3 +3199,341 @@ MIDDLEWARE = [
 Despues de realizar esto si se loguea con un usuario que no tenga imagen o biografia solamente se va a redirigir a http://127.0.0.1:8000/users/me/profile/ y solamente se podra hacer logout.
 
 ![assets/85.png](assets/85.png)
+
+## Clase 23 Formularios en Django
+
+Falta terminar de modificar el template para agregar los campos para actualizar la imagen de perfil y el formular para actualizar, website, biography y phone number.
+
+Abrir el template **Platzigram/templates/users/update_profile.html** y realizar la modificacion 
+
+```
+{% extends "base.html"%}
+
+{% block head_content %}
+
+<title>@{{ request.user.username}} | Update profile</title>
+
+{% load static %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+
+
+{% endblock %}
+
+{% block container %}
+
+    <div class="row justify-content-md-center">
+        <div class="col-6 p4" id="profile-box">
+
+            <form >
+
+                <div class="media">
+                    <img src="{% static "img/default-profile.png" %}" class="rounded-circle" height="50"/>
+
+                    <div class="media-body">
+                        <h5 class="ml-4">@{{ user.username}} | {{ user.get_full_name }}</h5>
+                        <p class="ml-4"><input type="file" name="picture" required="true"></p>
+                    </div>
+                </div>
+                <hr><br>
+
+                <div class="form-group">
+                    <label>Website</label>
+                    <input class="form-control" type="url" name="website" placeholder="Website" value="{{ user.profile.website }}" />
+                </div>
+
+                <div class="form-group">
+                    <label>Biography</label>
+                    <textarea class="form-control" name="biography">{{ user.profile.biography }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Phone number</label>
+                    <input type="text" class="form-control" name="phone_number" placeholder="Phone number" value="{{ user.profile.phone_number }}"/>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block mt-5">Update info</button>
+
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+```
+
+La clase utilitaria para formularios de Django nos ayuda a resolver mucho del trabajo que se realiza de forma repetitiva. La forma de implementarla es muy similar a la implementación de la clase models.model.
+
+Algunas de las clases disponibles en Django al implementar form, son:
+
+- BooleanField
+
+- CharField
+
+- ChoiceField
+
+- TypedChoiceField
+
+- DateField
+
+- DateTimeField
+
+- DecimalField
+
+- EmailField
+
+- FileField
+
+- ImageField"
+
+A traves del admin en el navegador se pueden establecer valores para que se vayan cargando en el perfil del usuario.
+
+por ejemplo aca esta otro perfil creado y en la otra ventana el acceso a todos los perfiles
+
+![assets/86.png](assets/86.png)
+
+desde el admin se ingresa al perfil y se empiezan a realizar modificaciones del website, biografia y numero y se guarda desde el admin para que posteriormente aparezca en el perfil
+
+![assets/87.png](assets/87.png)
+
+![assets/88.png](assets/88.png)
+
+**Nota:** Es importante aclarar que los valores que realmente estan trayendo la informacion desde el admin son los atributos que estan en el template **update_profile.html** como `{{ user.profile.biography }}` o en value `value="{{ user.profile.phone_number }}`, etc.
+
+Ahora lo que se va hacer es traer los propios **Form** que brinda Django para evitar estar utilizando y repetidiendo codigo, el modelo es parecido a la forma como se establecen los atributos o elementos para las bases de datos y todo se puede encontrar en la documentacion de como trabajar con [Django - Forms](https://docs.djangoproject.com/en/3.1/topics/forms/) y en como trabajar con los [Field - Forms](https://docs.djangoproject.com/en/3.1/ref/forms/fields/)
+
+Para empezar a trabajar con los Forms se puede trabajar con las vistas en **PLatzigram/users/views.py** donde se importa `from users.forms import ProfileForm` y la clase `update_profile` cambia de tal manera que se agrega render al contexto para simplificar mas toda la logica que se indica en la documentacion a implementar
+
+```
+""" Users views. """
+
+# Django
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+
+#Exception
+from django.db.utils import IntegrityError
+
+#Models
+from django.contrib.auth.models import User
+from users.models import Profile
+
+#Forms
+from users.forms import ProfileForm
+
+
+def login_view(request):
+    """ Login view """
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return redirect('feed')
+        else:
+            return render(request, 'users/login.html', {'error': 'Invalid username and password'})
+            
+    return render(request, 'users/login.html')
+
+
+def signup_view(request):
+    """ Sign up view """
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        password_confirmation = request.POST['password_confirmation']
+
+        if password != password_confirmation:
+            return render(request, 'users/signup.html', {'error': 'Password confirmation does not match'})
+
+        try:
+            user = User.objects.create_user(username=username, password=password)
+        except IntegrityError:
+            return render(request, 'users/signup.html', {'error': 'Username is already in user'})
+
+        user.first_name = request.POST['first_name']
+        user.last_name = request.POST['last_name']
+        user.email = request.POST['email']
+        user.save()
+
+        profile = Profile(user=user)
+        profile.save()
+
+        return redirect('login')
+
+
+    return render(request, 'users/signup.html')
+
+
+@login_required
+def update_profile(request):
+    """ Update a user's profile view. """
+    profile = request.user.profile
+
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+    # create a form instance and populate it with data from the request:
+        form = ProfileForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            # ...
+            # redirect to a new URL:
+            print(form.cleaned_data)
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form= ProfileForm()
+
+    return render(
+        request=request,
+        template_name='users/update_profile.html',
+        context={
+            'profile': profile,
+            'user': user,
+            'form': form,
+        }
+    )
+
+
+@login_required
+def logout_view(request):
+    """ Logout a user """
+    logout(request)
+    # Redirect to a success page.
+    return redirect('login')
+```
+
+Despues de realizar esto, se crea un archivoi **forms.py** en **Platzigram/users/forms.py**
+
+```
+""" User Forms """
+
+#Django
+from django import forms
+
+
+class ProfileForm(forms.Form):
+    """ Profile form """
+
+    website= forms.URLField(max_length=200, required=True)
+    biography= forms.CharField(max_length=500, required=False)
+    phone_number = forms.CharField(max_length=20, required=False)
+    picture = forms.ImageField()
+```
+
+Este debe ser consistente con el modelo como se haya creado 
+
+![assets/89.png](assets/89.png)
+
+para hacer la prueba se deben establecer valores que contengan mas de lo establecido, por ejemplo 
+
+en wl website añadir mas de 500 caracteres, en el numero mas de 20 caracteres y añadir la foto. Tambien no añadirla para ver si el formulario obliga a agregarla
+
+![assets/90.png](assets/90.png)
+
+si sale el siguiente error 
+
+![assets/91.png](assets/91.png)
+
+es porque falta añadir el metodo POST al form action del template update_profile.html y tambien el token csrf
+
+**Nota:** enctype 
+
+```
+            <form action="{% url "update_profile" %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+```
+
+![assets/92.png](assets/92.png)
+
+y nuevamente enviar el formulario con mas de los caracteres validos
+
+al enviar no pasa nada porque justamente en la logica de la vista se indica que si el formulario es valido se envia, si no, se limpia de nuevo 
+```
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            # ...
+            # redirect to a new URL:
+            print(form.cleaned_data)
+```            
+
+para que se informe un error se puede establecer un `forms.errors` que proporcionan los formularios y agregarlo al template
+
+```
+                {% if form.errors %}
+                <p class="alert alert-danger">{{ form.errors }}</p>
+                {% endif %}
+```        
+
+![assets/93.png](assets/93.png)
+
+De esta forma recargando la pagina y pasando mas valores de los que son validos, ya existe una forma para ver que errores son los que esta saliendo al introducir datos
+
+![assets/94.png](assets/94.png)
+
+Nuevamente si se pasan los datos bien como estan establecidos, no va arrojar ningun error y como existe print en la logica de la vista se va a imprimir los datos que se pasen en la terminal
+
+![assets/95.png](assets/95.png)
+
+Para empezar a guardar los datos que se pasaron en el navegador y que se actualicen luego en el admin y en base de datos hay que pasar los parametros en la vista y en la funcion `update_profile`
+
+```
+@login_required
+def update_profile(request):
+    """ Update a user's profile view. """
+    profile = request.user.profile
+
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+    # create a form instance and populate it with data from the request:
+        form = ProfileForm(request.POST, request.FILES)
+        # check whether it's valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            # ...
+            # redirect to a new URL:
+            data = form.cleaned_data
+
+            profile.website = data['website']
+            profile.phone_number = data['phone_number']
+            profile.biography = data['biography']
+            profile.picture = data['picture']
+            profile.save()
+
+            return redirect('update_profile')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form= ProfileForm()
+
+    return render(
+        request=request,
+        template_name='users/update_profile.html',
+        context={
+            'profile': profile,
+            'user': request.user,
+            'form': form
+        }
+    )
+```
+
+![assets/96.png](assets/96.png)
+
+Para que la imagen se cargue al navegador falta realizar una modificacion en la logica del template
+
+```
+                    {% if user.profile.picture %}
+                    <img src="{{ user.profile.picture.url }}" class="rounded-circle" height="50"/>
+                    {% else %}
+                    <img src="{% static "img/default-profile.png" %}" class="rounded-circle" height="50"/>
+                    {% endif %}
+```
+
+![assets/97.png](assets/97.png)
+
+
+y de esta forma ya se pueden ver todos los cambios reflejados en el perfil
+
+![assets/98.png](assets/98.png)
