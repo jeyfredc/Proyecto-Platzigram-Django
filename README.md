@@ -46,7 +46,7 @@
 
 [Clase 23 Formularios en Django](#Clase-23-Formularios-en-Django)
 
-[]()
+[Clase 24 Mostrando el form en el template](#Clase-24-Mostrando-el-form-en-el-template)
 
 []()
 
@@ -3537,3 +3537,139 @@ Para que la imagen se cargue al navegador falta realizar una modificacion en la 
 y de esta forma ya se pueden ver todos los cambios reflejados en el perfil
 
 ![assets/98.png](assets/98.png)
+
+## Clase 24 Mostrando el form en el template
+
+Existen diferentes formas en las que se pueden mostrar los valores del form, estas son: as_table, as_p y as_ul. También se pueden mostrar campos de manera individual, incluso customizar las clases que se van a usar para mostrar los errores, etc. Refinaremos la apariencia del form a través de algunas refactorizaciones en el template.
+
+Para comprender mejor como mejorar la forma de mostrar un error hay que revisar la seccion de Django [working with form templates](https://docs.djangoproject.com/en/3.1/topics/forms/#working-with-form-templates)
+
+Para hacer render de los errores hay que abrir el template **update_profile.html** y empezar aplicar la forma manual indicada en la documentacion donde dice que "cada campo está disponible como un atributo del formulario que usa , y en una plantilla de Django, se representará adecuadamente. Por ejemplo:{{ form.name_of_field }}". cuando dice cada campo disponible como atributo que usa se refiere a los campos establecidos en **forms.py**, para este proyecto son los campos **website, biography, phone_number, picture**
+
+Para iniciar se modifica website 
+
+![assets/99.png](assets/99.png)
+
+por lo siguiente 
+```
+                {# Website Field #}
+                <div class="form-group">
+                    <label>Website</label>
+                    <input 
+                    class="form-control {% if form.website.errors %}is-invalid{% endif %}"
+                    type="text"
+                    name="website"
+                    placeholder="Website"
+                    value="{% if form.errors %}{{ form.website.value }}{% else %}{{ user.profile.website }}{% endif %}" />
+                    <div class="invalid-feedback">
+                        {% for error in form.website.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                </div>
+```
+
+Se aplica **form.field.errors** como se indica en la documentacion y luego se evalua el atributo a traves de value con la misma propiedad **form.field.value** por ultimo se añade una clase de bootstrap y se itera sobre el error y luego se imprime, lo que se consigue con esto es que el navegador muestre de otra forma el error con la descripcion mucho mas presentable
+
+![assets/100.png](assets/100.png)
+
+Ahora falta aplicarlo a los otros capos que son biography, phone_number y picture, queda a continuacion todo el codigo de **update_profile.html**, teniendo en cuenta que se aplica la misma logica para el resto de fields.
+
+```
+{% extends "base.html"%}
+
+{% block head_content %}
+
+<title>@{{ request.user.username}} | Update profile</title>
+
+{% load static %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+
+
+{% endblock %}
+
+{% block container %}
+
+    <div class="row justify-content-md-center">
+        <div class="col-6 p4" id="profile-box">
+
+            <form action="{% url "update_profile" %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="media">
+                    {% if user.profile.picture %}
+                    <img src="{{ user.profile.picture.url }}" class="rounded-circle" height="50"/>
+                    {% else %}
+                    <img src="{% static "img/default-profile.png" %}" class="rounded-circle" height="50"/>
+                    {% endif %}
+
+                    <div class="media-body">
+                        <h5 class="ml-4">@{{ user.username}} | {{ user.get_full_name }}</h5>
+                        <p class="ml-4"><input type="file" name="picture"></p>
+                    </div>
+                </div>
+
+                {% for error in form.picture.errors %}
+                <div class="alert alert-danger">
+                    <b>Picture: </b>{{ error }}
+                </div>
+                {% endfor %}
+
+                <hr><br>
+
+                {# Website Field #}
+                <div class="form-group">
+                    <label>Website</label>
+                    <input 
+                    class="form-control {% if form.website.errors %}is-invalid{% endif %}"
+                    type="text"
+                    name="website"
+                    placeholder="Website"
+                    value="{% if form.errors %}{{ form.website.value }}{% else %}{{ user.profile.website }}{% endif %}" />
+                    <div class="invalid-feedback">
+                        {% for error in form.website.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {# Biography Field #}
+                <div class="form-group">
+                    <label>Biography</label>
+                    <textarea class="form-control {% if form.biography.errors %}is-invalid{% endif %}"
+                    name="biography">{% if form.errors %}{{ form.biography.value }}{% else %}{{ user.profile.biography }}{% endif %}</textarea>
+                    <div class="invalid-feedback">
+                        {% for error in form.biography.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                
+                </div>
+
+                <div class="form-group">
+                    <label>Phone number</label>
+                    <input type="text" class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}" name="phone_number" 
+                    placeholder="Phone number" 
+                    value="{% if form.errors %}{{ form.phone_number.value }}{% else %}{{ user.profile.phone_number }}{% endif %}"/>
+                    <div class="invalid-feedback">
+                        {% for error in form.phone_number.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                </div>
+
+
+                <button type="submit" class="btn btn-primary btn-block mt-5">Update info</button>
+
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+```
+
+De tal manera que al introducir o faltar algun campo en el navegador, se va indicar que errores son los que se estan teniendo 
+
+![assets/101.png](assets/101.png)
