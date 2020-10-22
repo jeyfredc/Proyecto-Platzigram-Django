@@ -3439,7 +3439,7 @@ si sale el siguiente error
 
 es porque falta añadir el metodo POST al form action del template update_profile.html y tambien el token csrf
 
-**Nota:** enctype 
+**Nota:** enctype es el protocolo que permite tener en cuenta si se envía simplemente texto o si se envían cosas más complejas como archivos, ya que no es lo mismo la transmisión de una cosa que de otra.
 
 ```
             <form action="{% url "update_profile" %}" method="POST" enctype="multipart/form-data">
