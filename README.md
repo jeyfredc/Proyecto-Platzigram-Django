@@ -48,7 +48,7 @@
 
 [Clase 24 Mostrando el form en el template](#Clase-24-Mostrando-el-form-en-el-template)
 
-[]()
+[Clase 25 Model forms](#Clase-25-Model-forms)
 
 []()
 
@@ -3673,3 +3673,362 @@ Ahora falta aplicarlo a los otros capos que son biography, phone_number y pictur
 De tal manera que al introducir o faltar algun campo en el navegador, se va indicar que errores son los que se estan teniendo 
 
 ![assets/101.png](assets/101.png)
+
+## Clase 25 Model forms
+
+ModelForm es una manera más sencilla de crear formularios en Django y en el caso de nuestro proyecto, se adapta mucho mejor al modelo que ya tenemos.
+Lo usaremos para crear el formulario de posts.
+
+Aprovecharemos para refinar la funcionalidad en el navbar y conectar el feed con los posts.
+
+La documentacion se encuentra en Djando [Model Form](https://docs.djangoproject.com/en/3.1/topics/forms/modelforms/), la forma en la que funciona es que la clase va a leer el modelo de Post
+
+Como se trata de crear un formulario para posts lo primero que hay que hacer es crear la url en **urls.py** y agregar el path.
+
+**Nota:** tambien dejar la vista posts sin path para ingresar a posts apenas se abra localhost o la ruta del navegador http://127.0.0.1:8000/
+
+```
+    path('', posts_views.list_posts, name='feed'),
+
+    path('posts/new/', posts_views.create_post, name='create_post'),
+```
+
+despues crear la funcion `create_post` en **Platzigram/posts/views.py** y añadir toda la logica para los forms 
+
+```
+"""Post views.  """
+
+# Django
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+
+# Utilities
+from datetime import datetime
+
+#Forms
+from posts.forms import PostForm
+
+
+posts=[
+    {
+        'title': 'Mont Blanck',
+        'user': {
+            'name': 'Jeyfred Calderon',
+            'picture': 'https://lh3.googleusercontent.com/ogw/ADGmqu9Rq5ukqaEtLja_pDNAyZJq7qMy3YTdwSEEdhXF=s32-c-mo',
+        },
+        'timestamp' : datetime.now().strftime('%b %dth, %Y - %H:%M hrs'),
+        'photo': 'https://picsum.photos/800/600?image=1036',
+    },
+    {
+        'title': 'Via Láctea',
+        'user': {
+            'name': 'Christian Van der Henst',
+            'picture': 'https://picsum.photos/60/60?image=1005',
+        },
+        'timestamp' : datetime.now().strftime('%b %dth, %Y - %H:%M hrs'),
+        'photo': 'https://picsum.photos/800/800?image=903',
+    },
+    {
+        'title': 'Nuevo auditorio',
+        'user': {
+            'name': 'Uriel (Thespianartist)',
+            'picture': 'https://picsum.photos/60/60?image=883',
+        },
+        'timestamp' : datetime.now().strftime('%b %dth, %Y - %H:%M hrs'),
+        'photo': 'https://picsum.photos/500/700?image=1076',
+    },
+]
+
+@login_required
+def list_posts(request):
+    """ List existing posts. """
+    return render(request, 'posts/feed.html', {'posts': posts})
+
+
+@login_required
+def create_post(request):
+    """ create new post view """
+    if request.method == 'POST':
+        form = PostForm(request.POST, request.FILES) 
+        if form.is_valid():
+            form.save()
+            return redirect('feed')
+    
+    else:
+        form = PostForm()
+
+    return render(
+        request= request,
+        template_name = 'posts/new.html',
+        context={
+            'form' : form,
+            'user' : request.user,
+            'profile' : request.user.profile
+        }
+    )
+```
+
+Ahora crear el formulario que se llama **forms.py** en **PLatzigram/posts/forms.py** de la manera en que lo proporciona [Model Form](https://docs.djangoproject.com/en/3.1/topics/forms/modelforms/)
+
+```
+""" Post forms """
+
+#Django
+from django import forms
+
+#Models
+from posts.models import Post
+
+
+class PostForm(forms.ModelForm):
+    """ Post Model form """
+
+    class Meta:
+        """ Form settings """
+        model = Post
+        fields = ('user', 'profile', 'title', 'photo')
+```
+
+y despues de esto solo falta crear la vista que se va a llamar **new.html** en **Platzigram/templates/posts/new.html**
+
+```
+{% extends "base.html" %}
+
+{% block head_content %}
+<title>Create new post</title>
+{% endblock %}
+
+{% block container %}
+
+    <div class="container">
+        <div class="row justify-content-md-center">
+            <div class="col-6 pt-3 pb-3" id="profile-box">
+                <h4 class="mb-4">Post a new photo!</h4>
+                <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <input type="hidden" name="user" value="{{ user.pk }}"/>
+                <input type="hidden" name="profile" value="{{ profile.pk }}"/>
+
+                {# website field#}
+                <div class="form-group">
+                    <input 
+                    class="form-control {% if form.title.errors %}is-invalid{% endif %}"
+                    type="text"
+                    name="title"
+                    placeholder="Title">
+                    <div class="invalid-feedback">
+                        {% for error in form.title.errors %}{{ error }}{% endfor %}
+                    </div>
+                </div>
+
+                {# Photo field #}
+                <div class="form-group">
+                    <label>Choose your photo:</label>
+                    <input 
+                    class="form-control {% if form.photo.errors %}is-invalid{% endif %}"
+                    type="file"
+                    name="photo"
+                    placeholder="Photo">
+                    <div class="invalid-feedback">
+                        {% for error in form.photo.errors %}{{ error }}{% endfor %}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block mt-5">Publish</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+```
+
+y ahora lo que hay que hacer es redireccionar a la pagina http://127.0.0.1:8000/posts/new/ para comprobar que este cargando la vista correctamente
+
+![assets/102.png](assets/102.png)
+
+Ahora si se requiere realizar un post se puede hacer y se puede verificar que este cargando en posts del admin 
+
+![assets/103.png](assets/103.png)
+
+y despues de hacer el post se redirecciona hacia el feed pero no esta publicando todavia el post que se guardo en la base de datos.
+
+![assets/104.png](assets/104.png)
+Adicionalmente hay que corregir un poco mas la vista de la navegacion porque ya se tiene configurado el **logout** pero tambien hacia falta configurar **new post** y **profile**
+
+para empezar a corregir hay que abrir **nav.html** en **Platzigram/templates/nav.html**
+
+primero se añade la logica en la imagen de perfil para que se empiece a cargar la imagen de usuario en el navbar
+
+```
+                <li class="nav-item">
+                    <a href="">
+                        {% if request.user.profile.picture %}
+                        <img src="{{ request.user.profile.picture.url }}" height="35" class="d-inline-block align-top rounded-circle"/>
+                        {% else %}
+                        <img src="{% static 'img/default-profile.png' %}" height="35" class="d-inline-block align-top rounded-circle"/>
+                        {% endif %}
+                    </a>
+                </li>
+```
+
+![assets/105.png](assets/105.png)
+
+Luego darle conexion para crear un post 
+
+```
+                <li class="nav-item nav-icon">
+                    <a href="{% url "create_post" %}">
+                        <i class="fas fa-plus"></i>
+                    </a>
+                </li>
+```                
+
+el archivo queda asi
+
+```
+{% load static %}
+<nav class="navbar navbar-expand-lg fixed-top" id="main-navbar">
+    <div class="container">
+
+        <a class="navbar-brand pr-5" style="border-right: 1px solid #efefef;" href="">
+            <img src="{% static "img/instagram.png" %}" height="45" class="d-inline-block align-top"/>
+        </a>
+
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav mr-auto">
+
+                <li class="nav-item">
+                    <a href="">
+                        {% if request.user.profile.picture %}
+                        <img src="{{ request.user.profile.picture.url }}" height="35" class="d-inline-block align-top rounded-circle"/>
+                        {% else %}
+                        <img src="{% static 'img/default-profile.png' %}" height="35" class="d-inline-block align-top rounded-circle"/>
+                        {% endif %}
+                    </a>
+                </li>
+
+                <li class="nav-item nav-icon">
+                    <a href="{% url "create_post" %}">
+                        <i class="fas fa-plus"></i>
+                    </a>
+                </li>
+
+                <li class="nav-item nav-icon">
+                    <a href="{% url "logout" %}">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+</nav>
+```
+
+para que al dar click, se redirija a **create_post** en el navegador desde la ruta principal
+
+![assets/106.png](assets/106.png)
+
+Por ultimo se hace la conexion para que al crear un post se actualice en feed
+
+Abrir el archivo **Platzigram/posts/views.py** y modificar de la siguiente forma, lo que se hace es importar el modelo donde estan creadas las bases de datos y en la funcion `list_posts` se trae la lista de objetos y se ordena del ultimo al primero con `posts= Post.objects.all().order_by('-created')`
+
+```
+"""Post views.  """
+
+# Django
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+
+#Models
+
+from posts.models import Post
+
+#Forms
+from posts.forms import PostForm
+
+
+@login_required
+def list_posts(request):
+    """ List existing posts. """
+    posts= Post.objects.all().order_by('-created')
+
+    return render(request, 'posts/feed.html', {'posts': posts})
+
+
+@login_required
+def create_post(request):
+    """ create new post view """
+    if request.method == 'POST':
+        form = PostForm(request.POST, request.FILES) 
+        if form.is_valid():
+            form.save()
+            return redirect('feed')
+    
+    else:
+        form = PostForm()
+
+    return render(
+        request= request,
+        template_name = 'posts/new.html',
+        context={
+            'form' : form,
+            'user' : request.user,
+            'profile' : request.user.profile
+        }
+    )
+```
+
+El template **feed.html** que se encuentra en **Platzigram/templates/posts/feed.html**, tiene algunas modificaciones para que se puedan cargar los posts desde la base de datos
+
+```
+{% extends "base.html" %}
+
+{% block head_content %}
+    <title>Platzigram</title>
+{% endblock%}
+
+{% block container %}
+    <div class="container">
+        <div class="row">
+
+            {% for post in posts %}
+            <div class="col-sm-12 col-md-8 offset-md-2 mt-5 p-0 post-container">
+                <div class="media pt-3 pl-3 pb-1">
+                    <img class="mr-3 rounded-circle" height="35" src="{{ post.profile.picture.url }}" alt="{{ post.user.get_full_name }}">
+                    <div class="media-body">
+                        <p style="margin-top: 5px;">{{ post.user.get_full_name  }}</p>
+                    </div>
+                </div>
+
+                <img style="width: 100%;" src="{{ post.photo.url }}" alt="{{ post.title }}">
+
+                <p class="mt-1 ml-2" >
+                    <a href="" style="color: #000; font-size: 20px;">
+                        <i class="far fa-heart"></i>
+                    </a> 30 likes
+                </p>
+                <p class="ml-2 mt-0 mb-2">
+                    <b>{{ post.title }}</b> - <small>{{ post.created }}</small>
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
+```
+
+Finalmente el post que se realizo y cargo en base de datos ya esta cargando en la pagina principal
+
+![assets/107.png](assets/107.png)
+
+
+Si se crea un nuevo post tambien va a aparecer el ultimo que se cargue por ejemplo 
+
+![assets/108.png](assets/108.png)
+
+y de esta forma ya queda cargado
+
+![assets/109.png](assets/109.png)
