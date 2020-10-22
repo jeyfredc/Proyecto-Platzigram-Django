@@ -44,7 +44,7 @@
 
 [Clase 22 Middlewares](#Clase-22-Middlewares)
 
-[]()
+[Clase 23 Formularios en Django](#Clase-23-Formularios-en-Django)
 
 []()
 
