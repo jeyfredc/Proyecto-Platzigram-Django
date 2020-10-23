@@ -50,7 +50,7 @@
 
 [Clase 25 Model forms](#Clase-25-Model-forms)
 
-[]()
+[Clase 26 Validación de formularios](#Clase-26-Validación-de-formularios)
 
 []()
 
@@ -4032,3 +4032,205 @@ Si se crea un nuevo post tambien va a aparecer el ultimo que se cargue por ejemp
 y de esta forma ya queda cargado
 
 ![assets/109.png](assets/109.png)
+
+## Clase 26 Validación de formularios
+
+Falta crear el link en **Login** para redirigir hacia **Sign up** y crear cualquier usuario.
+
+Para eso abrir el template **login.html** en **Platzigram/templates/users/login.html** y agregar al final despues del boton Sign in!  y el form que cierra todo lo siguiente
+
+```
+<p class="mt-4">Don't have an account yet? <a href="{% url "signup" %}">Sign up here.</a></p>
+```
+
+![assets/110.png](assets/110.png)
+
+Para aprender a validar los campos de un formulario vamos a actualizar el registro de usuarios.
+Hasta este momento el script de validación del formulario Signup está escrito directamente en la vista que esta ubicada en **Platzigram/users/views.py**
+
+![assets/111.png](assets/111.png)
+
+, y a pesar de que no genera ningún error, puede convertirse en un problema, así que lo recomendable es separarlo. Crearemos un nuevo form con la clase forms.Form, también vamos a introducir un nuevo concepto relacionado con formularios: los widgets.
+
+para esto se va a crear otra clase `SignupForm` que va a estar ubicada en **Platzigram/users/forms.py** y se empieza a agregar cada uno de los fields que componen el formulario para crear una cuenta, recordando que estos estan en la documentacion de Django [Form fields](https://docs.djangoproject.com/en/3.1/ref/forms/fields/) y luedo de esto en el password se añade un widget consultar la documentacion de Django [Widgets](https://docs.djangoproject.com/en/3.1/ref/forms/widgets/).
+
+```
+class SignupForm(forms.Form):
+    """ Sign up form """
+
+    username = forms.CharField(min_length=4, max_length=50)
+
+    password = forms.CharField(max_length=70, widget=forms.PasswordInput())
+
+    password_confirmation = forms.CharField(max_length=70, widget=forms.PasswordInput())
+
+    first_name = forms.CharField(min_length=2, max_length=50)
+
+    last_name = forms.CharField(min_length=2, max_length=50)
+
+    email = forms.CharField(min_length=6, max_length=70, widget=forms.EmailInput())    
+```
+
+Los widgets en Django, son una representación de elementos de HTML que pueden incluir ciertas validaciones. Por default todos los campos son requeridos. Los datos depurados se pueden consultar con self.cleaned_data['_nombre_del_field_'], y esto se puede encontrar en las Validaciones de los Forms [Form and field validation](https://docs.djangoproject.com/en/3.1/ref/forms/validation/). Lo que dice es que dentro de la instancia de un formulario python va a llamar varios metodos. Lo primero que hace es convertir un valor ingresado a un valor de Python, luego va a llamar al metodo `validate()`, `run_validators()`, `clean()`, existen formas para validar varios campos con la clase **validate** y para validar un solo campo con el metodo `clean_nombre_del_field_'`.
+
+El campo que se requiere validar es username por tanto se implementa el metodo a continuacion `def clean_username(self):`, lo primero que se debe hacer es acceder al valor `username = self.cleaned_data['username']`,  para validar que el username sea unico se hace un query a la base de datos, indica que traiga a todos los usuarios de la abase de datos a traves de filter y al final se añade exists para que traiga un booleano True o False `username_taken = User.objects.filter(username=username).exists()` y luego se añade la validacion con un mensaje de error que Django se encarga de mostrar al usuario, siempre que se vaya a hacer la validacion de un campo se tiene que regresar el campo a traves de `return username` en este caso 
+
+```
+if username_taken:
+    raise forms.ValidationError('Username is already in use.')
+return username
+```
+
+Es importante traer al modelo de usuario a traves de `from django.contrib.auth.models import User`
+
+Para validar las contraseñas y los casos que la confirmacion dependen una de la otra es decir que la contraseña y la confirmacion de la contraseña deben ser iguales se implementa el metodo clean `def clean(self):` para traer los datos y sobre escribirlos se trae el metodo **super()** con `data = super().clean`, despues se traen las variables password y password confirmation a traves de data
+
+```
+password = data['password']
+password_confirmation = data['password_confirmation']
+```
+y se agrega la validacion con el error
+
+```
+if password != password_confirmation:
+    raise forms.ValidationError('Passwords do no match.')
+
+return data
+```
+
+y ahora se debe indicar que si ya ha obtenido los datos como se van a guardar. Se implementa el metodo save `def save(self):` se traen todos los datos a traves de la variable data y lo que esta guardado en cleaned_data `data = self.cleaned_data`, la confirmacion del password ya no se requiere por que se ha validado por lo tanto se puede borrar con el metodo pop `data.pop('password_confirmation')` y luego viene la creacion del usuario y el perfil ya que estos dos se guardan al tiempo. `user = User.objects.create_user(**data)`, al traer (**data) quiere decir que esta trayendo todos los atributos del diccionario
+
+```
+user = User.objects.create_user(**data)
+profile = Profile(user=user)
+profile.save()
+```
+
+Para que funcione es necesario traer el modelo del perfil a traves de `from users.models import Profile`
+
+```
+""" User Forms """
+
+#Django
+from django import forms
+
+from django.contrib.auth.models import User
+from users.models import Profile
+
+
+class SignupForm(forms.Form):
+    """ Sign up form """
+
+    username = forms.CharField(min_length=4, max_length=50)
+
+    password = forms.CharField(max_length=70, widget=forms.PasswordInput())
+
+    password_confirmation = forms.CharField(max_length=70, widget=forms.PasswordInput())
+
+    first_name = forms.CharField(min_length=2, max_length=50)
+
+    last_name = forms.CharField(min_length=2, max_length=50)
+
+    email = forms.CharField(min_length=6, max_length=70, widget=forms.EmailInput())
+
+
+    def clean_username(self):
+        """ Username must be unique. """
+        username = self.cleaned_data['username']
+        username_taken = User.objects.filter(username=username).exists()
+        if username_taken:
+            raise forms.ValidationError('Username is already in use.')
+        return username
+
+
+    def clean(self):
+        """ Verify password confirmation match """
+        data = super().clean()
+
+        password = data['password']
+        password_confirmation = data['password_confirmation']
+
+        if password != password_confirmation:
+            raise forms.ValidationError('Passwords do no match.')
+
+        return data
+
+
+    def save(self):
+        """ Create user and profile """
+        data = self.cleaned_data
+        data.pop('password_confirmation')
+        user = User.objects.create_user(**data)
+        profile = Profile(user=user)
+        profile.save()
+
+
+class ProfileForm(forms.Form):
+    """ Profile form """
+
+    website= forms.URLField(max_length=200, required=True)
+    biography= forms.CharField(max_length=500, required=False)
+    phone_number = forms.CharField(max_length=20, required=False)
+    picture = forms.ImageField()
+```
+
+despues de crear el formulario y las validaciones ahora si se pasa a la vista en **Platzigram/users/views.py** y se modifica toda la logica de `signup`
+
+```
+def signup_view(request):
+    """ Sign up view """
+    if request.method == 'POST':
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')
+    else:
+        form = SignupForm()
+
+    return render(
+        request=request,
+        template_name = 'users/signup.html',
+        contex
+```
+
+tambien se debe importar el form de SignUpForm `from users.forms import ProfileForm, SignupForm` y se elimina el error que antes se habia importador y capturado con `try except` 
+`from django.db.utils import IntegrityError`
+
+Para hacer uso del form tambien se cambia el template `signup` segun la estructura de Bootstrap que tiene con la logica por la forma que ofrece los Forms de Django de cargar los datos [working with form templates](https://docs.djangoproject.com/en/3.1/topics/forms/#working-with-form-templates) cambiar logica de **Platzigram/templates/users/signup.html** por la siguiente 
+
+```
+{% extends "users/base.html" %}
+
+{% block head_content %}
+<title>Platzigram sign up</title>
+{% endblock %}
+
+{% block container %}
+
+    <form action="{% url "signup" %}" method="POST">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button class="btn btn-primary btn-block mt-5" type="submit">Register!</button>
+
+    </form>
+    
+{% endblock %}
+```
+
+La vista en el navegador en la ruta http://localhost:8000/users/signup/ va a cambiar por la siguiente, en el momento no tiene estilos pero esta cumpliendo con la funcion de formulario y validar los datos, si se crear otro usuario de manera incorrecta se va a mostrar de esta forma
+
+![assets/112.png](assets/112.png)
+
+y luego informa el error, en este caso es que el usuario ya existe
+
+![assets/113.png](assets/113.png)
+
+Si se crea un nuevo usuario este va a cargar automaticamente en la base de datos y va a estar listo para configurar el perfil, la imagen y demas atributos requeridos para ir a la zona principal
+
+![assets/114.png](assets/114.png)
+
+![assets/115.png](assets/115.png)
+
+![assets/116.png](assets/116.png)
