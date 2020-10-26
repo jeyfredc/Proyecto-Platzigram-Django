@@ -52,7 +52,7 @@
 
 [Clase 26 Validación de formularios](#Clase-26-Validación-de-formularios)
 
-[]()
+[Clase 27 Class-based views](#Clase-27-Class-based-views)
 
 []()
 
@@ -4234,3 +4234,238 @@ Si se crea un nuevo usuario este va a cargar automaticamente en la base de datos
 ![assets/115.png](assets/115.png)
 
 ![assets/116.png](assets/116.png)
+
+## Clase 27 Class-based views
+
+Veamos de qué forma optimizamos el proceso de creación de nuestras apps de forma que no repitamos código. Para veamos cuál es el concepto de [class based views](https://docs.djangoproject.com/en/3.1/topics/class-based-views/).
+
+Las vistas también pueden ser clases, que tienen el objetivo de evitar la repetición de tareas como mostrar los templates, son vistas genéricas que resuelven problemas comunes.
+
+Abrir **urls.py**, a continuacion todo lo que se encuentra en el archivo va a cambiar y se van a mover bloques de codigo a otros archivos 
+
+lo primero que se va a hacer es eliminar las vistas que se crearon al principio del curso es decir estas 
+
+```
+    path('hello-world/', local_views.hello_world, name='hello_world'),
+
+    path('sorted/', local_views.sort_integers, name='sort'),
+
+    path('hi/<str:name>/<int:age>/', local_views.say_hi, name='hi'),
+```
+
+Ademas borrar el archivo **views.py** el cual sirvio como introduccion para iniciar con el curso 
+
+Ahora nuevamente abrir **urls.py** y alli se encuentran las urls que tienen que ver con posts y con users, lo que se va a hacer es mandar esas urls a sus respectivas aplicaciones para esto se debe importar `include`, esta funcion recibe dos parametros, el primero recibe una tupla que recibe o indica de que aplicacion viene y el segundo es un `namespace` que es un conjunto de nombres que definen las urls. 
+
+La tupla tiene dos elementos que es donde esta ubicado el archivo de urls y el nombre de la aplicacion y el namespace tambien lleva el nombre de la aplicacion 
+
+`path('', include(('posts.urls', 'posts'), namespace='posts')),`
+
+ahora se sacan los 2 path de posts que se habian creado es decir 
+
+```
+
+    path('', posts_views.list_posts, name='feed'),
+
+    path('posts/new/', posts_views.create_post, name='create_post'),
+```
+
+se cortan y a continuacion crear un archivo que se llame **urls.py** en la ruta **Platzigram/posts/urls.py** y alli pegar los 2 path, los argumentos van a cambiar un poco pero es mas legible y sencillo de entender
+
+```
+""" Posts urls """
+
+#Django
+from django.urls import path
+
+#Views
+from posts import views
+
+urlpatterns = [
+
+    path(
+        route='',
+        view= views.list_posts,
+        name='feed'
+    ),
+
+    path(
+        route='posts/new/',
+        view= views.create_post,
+        name='create_post'
+        ),
+
+]
+```
+
+Ahora hay que realizar lo mismo con los path de users, nuevamente en **Platzigram/platzigram/urls.py**
+
+el archivo queda de esta forma 
+
+```
+""" Platzigram URLs module. """
+
+#Django
+from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
+from django.urls import path, include
+
+
+urlpatterns = [
+
+    path('admin/', admin.site.urls),
+
+    path('', include(('posts.urls', 'posts'), namespace='posts')),
+
+    path('users/', include(('users.urls', 'users'), namespace='users')),
+
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
+Cortar los path de users, crear un archivo que se llame **urls.py** y pegarlos en **Platzigram/users/urls.py**
+
+y establecer los mismos pasos que se hicieron con posts, en este archivo se va a crear el perfil del usuario para eso tambien se establece la ruta a traves de la libreria que proporciona la documentacion para implementar clases basadas en vistas  a traves de `from django.views.generic import TemplateView` y el path para el detalle de usuario 
+
+```
+    path(
+        route = '<str:username>/',
+        view = TemplateView.as_view(template_name='users/detail.html'),
+        name = 'detail'
+    ),
+```
+
+El archivo queda asi 
+
+```
+""" Users urls """
+
+#Django
+from django.urls import path
+from django.views.generic import TemplateView
+
+#Views
+from users import views
+
+urlpatterns = [
+
+    #posts
+    path(
+        route = '<str:username>/',
+        view = TemplateView.as_view(template_name='users/detail.html'),
+        name = 'detail'
+    ),
+
+    #Mangement
+    path(
+        route = 'users/login/', 
+        view = views.login_view,
+        name = 'login'
+    ),
+
+    path(
+        route = 'users/logout/',
+        view = views.logout_view, 
+        name='logout'
+    ),
+
+    path(
+        route = 'users/signup/', 
+        view= views.signup_view, 
+        name='signup'
+    ),
+
+    path(
+        route = 'users/me/profile/', 
+        view = views.update_profile, 
+        name='update_profile'
+    ),
+
+]
+```
+
+Como se cambiaron algunas configuraciones que ya estaban establecidas todas las rutas van a empezar a fallar, es decir el navegador va a empezar a arrojar errores en cada una de las rutas 
+
+![assets/117.png](assets/117.png)
+
+el namespace para feed que se establecio es posts, por tanto se debe cambiar 
+
+`href=" {% url "feed" %}`
+
+por `href=" {% url "posts:feed" %}` en el archivo **nav.html**, y si se sigue cargando la pagina despues de hacer cambios van aparecer mas errores
+
+![assets/118.png](assets/118.png)
+
+
+ahora se cambia
+
+`href="{% url "create_post" %}"`
+
+por  `href="{% url "posts:create_post" %}"` en el archivo **nav.html**
+
+esto se debe hacer con cada error que cargue dependiendo si la ruta o el namespace esta en users o posts
+
+Ahora crear el template **detail.html** en **Platzigram/templates/users/detail.html** el cual queda con la siguiente estructura de codigo
+
+```
+{% extends "base.html" %}
+
+{% block head_content %}
+<title>@{{ request.user.username }} | Platzigram</title>
+{% endblock %}
+
+{% block container %}
+
+    <div class="container mb-5" style="margin-top: 8em;">
+        <div class="row">
+            <div class="col-sm-4 d-flex justify-content-center">
+                <img src="{{ request.user.profile.picture.url }}" alt="@{{ request.user.username}}" class="rounded-circle" width="150px" />
+            </div>
+            <div class="col-sm-8">
+                <h2 style="font-weight: 100;">
+                    {{ request.user.username }}
+                    {% if request.user == user %}
+                        <a
+                            href="{% url "users:update_profile" %}"
+                            class="ml-5 btn btn-sm btn-outline-info"
+                        >
+                            Edit profile
+                        </a>
+                    {% else %}
+                        <a
+                            href=""
+                            class="ml-5 btn btn-sm btn-primary"
+                        >
+                            Follow
+                        </a>
+                    {% endif %}
+                </h2>
+                <div class="row mt-2" style="font-size: 1.2em">
+                    <div class="col-sm-4">
+                        <b>{{ request.user.profile.posts_count }}785</b> posts
+                    </div>
+                    <div class="col-sm-4">
+                        <b>{{ request.user.profile.followers }}1,401</b> followers
+                    </div>
+                    <div class="col-sm-4">
+                        <b>{{ request.user.profile.following }}491</b> following
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-sm-12">
+                        <p>{{ request.user.profile.biography }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+{% endblock %}
+
+```
+
+por ultimo se puede probar que el template este cargando , estableciendo cualquier ruta en users como http://localhost:8000/users/hola/
+
+![assets/119.png](assets/119.png)
