@@ -2,7 +2,7 @@
 <nav class="navbar navbar-expand-lg fixed-top" id="main-navbar">
     <div class="container">
 
-        <a class="navbar-brand pr-5" style="border-right: 1px solid #efefef;" href=" {% url "posts:feed" %}">
+        <a class="navbar-brand pr-5" style="border-right: 1px solid #efefef;" href="{% url "posts:feed" %}">
             <img src="{% static "img/instagram.png" %}" height="45" class="d-inline-block align-top"/>
         </a>
 
@@ -10,14 +10,14 @@
             <ul class="navbar-nav mr-auto">
 
                 <li class="nav-item">
-                    <a href="">
+                    <a href="{% url "users:detail" user.username %}">
                         {% if request.user.profile.picture %}
-                        <img src="{{ request.user.profile.picture.url }}" height="35" class="d-inline-block align-top rounded-circle"/>
-                        {% else %}
-                        <img src="{% static 'img/default-profile.png' %}" height="35" class="d-inline-block align-top rounded-circle"/>
+                            <img src="{{ request.user.profile.picture.url }}" height="35" class="d-inline-block align-top rounded-circle"/>
+                        {% else%}
+                            <img src="{% static 'img/default-profile.png' %}" height="35" class="d-inline-block align-top rounded-circle"/>
                         {% endif %}
                     </a>
-                </li>
+                </li>   
 
                 <li class="nav-item nav-icon">
                     <a href="{% url "posts:create_post" %}">

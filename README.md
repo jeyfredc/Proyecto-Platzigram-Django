@@ -54,7 +54,7 @@
 
 [Clase 27 Class-based views](#Clase-27-Class-based-views)
 
-[]()
+[Clase 28 Protegiendo la vista de perfil, Detail View y List View](#Clase-28-Protegiendo-la-vista-de-perfil-Detail-View-y-List-View)
 
 []()
 
@@ -4349,38 +4349,38 @@ from users import views
 
 urlpatterns = [
 
+
+    #Mangement
+    path(
+        route = 'login/', 
+        view = views.login_view,
+        name = 'login'
+    ),
+
+    path(
+        route = 'logout/',
+        view = views.logout_view, 
+        name='logout'
+    ),
+
+    path(
+        route = 'signup/', 
+        view= views.signup_view, 
+        name='signup'
+    ),
+
+    path(
+        route = 'me/profile/', 
+        view = views.update_profile, 
+        name='update_profile'
+    ),
+
     #posts
     path(
         route = '<str:username>/',
         view = TemplateView.as_view(template_name='users/detail.html'),
         name = 'detail'
     ),
-
-    #Mangement
-    path(
-        route = 'users/login/', 
-        view = views.login_view,
-        name = 'login'
-    ),
-
-    path(
-        route = 'users/logout/',
-        view = views.logout_view, 
-        name='logout'
-    ),
-
-    path(
-        route = 'users/signup/', 
-        view= views.signup_view, 
-        name='signup'
-    ),
-
-    path(
-        route = 'users/me/profile/', 
-        view = views.update_profile, 
-        name='update_profile'
-    ),
-
 ]
 ```
 
@@ -4469,3 +4469,507 @@ Ahora crear el template **detail.html** en **Platzigram/templates/users/detail.h
 por ultimo se puede probar que el template este cargando , estableciendo cualquier ruta en users como http://localhost:8000/users/hola/
 
 ![assets/119.png](assets/119.png)
+
+## Clase 28 Protegiendo la vista de perfil, Detail View y List View
+
+En esta clase vamos a usar Detail View para continuar con el perfil de usuario y usaremos List View para definir la lista de views.
+
+actualmente al cargar la vista http://localhost:8000/users/hola/ no esta cargando un usuario que se haya creado en la base de datos es decir `/hola/` en la url no es un usuario de la base de datos, es cualquier argumento que se esta pasando y esto no deberia pasar por tal motivo hay que hacer uso de **Detail View** y volver mas complejo el path que se encuentra en **Platzigram/users/urls.py**
+
+este path se debe cambiar 
+
+```
+    path(
+        route = '<str:username>/',
+        view = TemplateView.as_view(template_name='users/detail.html'),
+        name = 'detail'
+    ),
+```    
+
+por el siguiente
+
+```
+    path(
+        route = '<str:username>/',
+        view = views.UserDetailView.as_view(),
+        name = 'detail'
+    ),
+```
+
+y tambien quitar `from django.views.generic import TemplateView`
+
+pasar a las vistas para crear la nueva clase `UserDetailView()` en **Platzigram/users/views.py** e importar `from django.views.generic import DetailView`
+
+```
+class UserDetailView(DetailView):
+    """ User detail view """
+
+    template_name = 'users/detail.html'
+
+```
+
+aqui va a indicar un error que dice que hace falta **QuerySet** y esto significa que a partir de que conjunto de datos va a traer los datos, para esto se utiliza
+
+![assets/120.png](assets/120.png)
+
+`queryset = User.objects.all()`
+
+para usar un query es necesario importar el modelo de la base de datos con 
+
+`from django.contrib.auth.models import User`
+
+despues de realizar esto va a salir otro error 
+
+![assets/121.png](assets/121.png)
+
+e indica que debe ser llamado con un Primary key o un slug(), el slug indica que es el username, tiene que ver con un campo de texto unico y ademas se utiliza `slug_url_kwarg` pero este esta relacionado con la ruta que se establece en el path, donde se indica que el username es un string `route = '<str:username>/',`
+
+`slug_field = 'username'`
+
+`slug_url_kwarg= 'username'`
+
+**Nota:** si la ruta se llamara de otra forma `route = '<str:slug>/'` el slug_url_kwarg tambien se debe llamar slug `slug_url_kwarg= 'slug'`
+
+Ahora al recargar la pagina va a salir un error 404 que va indicar simplemente que ya esta cargando bien al usuario de esa sesion 
+
+![assets/122.png](assets/122.png)
+
+en este caso el usuario es Sebasc y va a cargar como si estuviera el perfil, pero los datos no se estan trayendo de manera correcta
+
+![assets/123.png](assets/123.png)
+
+el template **detail.html** se debe modificar 
+
+```
+{% extends "base.html" %}
+
+{% block head_content %}
+<title>@{{ user.username }} | Platzigram</title>
+{% endblock %}
+
+{% block container %}
+
+    <div class="container mb-5" style="margin-top: 8em;">
+        <div class="row">
+            <div class="col-sm-4 d-flex justify-content-center">
+                <img src="{{ user.profile.picture.url }}" alt="@{{ user.username}}" class="rounded-circle" width="150px" />
+            </div>
+            <div class="col-sm-8">
+                <h2 style="font-weight: 100;">
+                    {{ user.username }}
+                    {% if user == request.user %}
+                        <a
+                            href="{% url "users:update_profile" %}"
+                            class="ml-5 btn btn-sm btn-outline-info"
+                        >
+                            Edit profile
+                        </a>
+                    {% else %}
+                        <a
+                            href=""
+                            class="ml-5 btn btn-sm btn-primary"
+                        >
+                            Follow
+                        </a>
+                    {% endif %}
+                </h2>
+                <div class="row mt-2" style="font-size: 1.2em">
+                    <div class="col-sm-4">
+                        <b>{{ user.profile.posts_count }}785</b> posts
+                    </div>
+                    <div class="col-sm-4">
+                        <b>{{ user.profile.followers }}1,401</b> followers
+                    </div>
+                    <div class="col-sm-4">
+                        <b>{{ user.profile.following }}491</b> following
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-sm-12">
+                        <p>{{ user.profile.biography }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+{% endblock %}
+```
+
+si ahora se establece la ruta para el usuario Sebasc
+
+![assets/124.png](assets/124.png)
+
+aparece follow para seguir y si se ubica dentro del perfil del mismo usuario con el que se logueo la sesion va a salir edith profile
+
+![assets/125.png](assets/125.png)
+
+ademas en cada archivo se deben empezar a corregir las rutas y las redirecciones por ejemplo al hacer click en edit profile sale otro error 
+
+![assets/126.png](assets/126.png)
+
+que indica que la ruta en el template update_profile ya no es esa ruta `"{% url "update_profile" %}` ahora se llama `"{% url "users:update_profile" %}`
+
+al corregir ya se carga la ruta para empezar a editar 
+
+![assets/127.png](assets/127.png)
+
+
+
+Al intentar cargar datos, nuevamente sale un error que esta en el redirect de la linea 80 de la ruta **Platzigram/users/views.py**
+
+![assets/128.png](assets/128.png)
+
+la cual cambia de ser `return redirect('update_profile')` por `return redirect('users:update_profile')` y tambien es buen momento para empezar a reconfigurar todas las vistas
+
+`return redirect('feed')` por `return redirect('posts:feed')`
+
+`return redirect('login')` por `return redirect('users:login')`
+
+y tambien corregir las urls que estan en los templates **signup.html** y **login.html**
+
+de esta forma si se corrige y se hacen cambios sobre el perfil, van a empezar a aparecer 
+
+![assets/129.png](assets/129.png)
+
+Ahora en vez de redirigir hacia `update_profile` ahora va a redirigir hacia el perfil el cual se establecio como `detail`.
+
+en la funcion update_profile se debe cambiar todo el redirect
+
+`return redirect('users:update_profile')`.
+
+como se va a cambiar se debe importar `from django.urls import reverse` y establecer la ruta en la funcion 
+
+```
+@login_required
+def update_profile(request):
+    """ Update a user's profile view. """
+    profile = request.user.profile
+
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+    # create a form instance and populate it with data from the request:
+        form = ProfileForm(request.POST, request.FILES)
+        # check whether it's valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            # ...
+            # redirect to a new URL:
+            data = form.cleaned_data
+
+            profile.website = data['website']
+            profile.phone_number = data['phone_number']
+            profile.biography = data['biography']
+            profile.picture = data['picture']
+            profile.save()
+
+            url = reverse('users:detail', kwargs={'username': request.user.username})
+            return redirect(url)
+```
+
+y ahora si se requiere actualizar alguna informacion en el perfil, al dar clik en update info debe redirigir hacia el perfil del usuario
+
+![assets/130.png](assets/130.png)
+
+y se actualizan los datos, imagenes y demas caracteristicas
+
+![assets/131.png](assets/131.png)
+
+**Nota:** Cualquier duda revisar los archivos del repositorio
+
+Falta actualizar los posts o publicaciones que han realizado los usuarios para esto se hace uso de [DetailView](https://docs.djangoproject.com/en/3.1/topics/class-based-views/generic-display/#adding-extra-context)
+
+
+y se crea la funcion `get_context_data` en la clase `UserDetailView` y se importa Post `from posts.models import Post` para traer las imagenes posteadas de cada usuario, tambien para que sea requerido el login en una vista se trae al mixin LoginRequiredMixin con `from django.contrib.auth.mixins import LoginRequiredMixin` y se implementa en la clase UserDetailView `class UserDetailView(LoginRequiredMixin, DetailView):`
+
+
+```
+""" Users views. """
+
+# Django
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.views.generic import DetailView
+
+#Models
+from django.contrib.auth.models import User
+from posts.models import Post
+
+#Forms
+from users.forms import ProfileForm, SignupForm
+
+
+class UserDetailView(LoginRequiredMixin, DetailView):
+    """ User detail view """
+
+    template_name = 'users/detail.html'
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+    queryset = User.objects.all()
+    context_object_name = 'user'
+
+    def get_context_data(self, **kwargs):
+        """ User detail view. """
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+        user = self.get_object()
+        # Add in a QuerySet of all the books
+        context['posts'] = Post.objects.filter(user=user).order_by('-created')
+        return context
+
+
+def login_view(request):
+    """ Login view """
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return redirect('posts:feed')
+        else:
+            return render(request, 'users/login.html', {'error': 'Invalid username and password'})
+            
+    return render(request, 'users/login.html')
+
+
+def signup_view(request):
+    """ Sign up view """
+    if request.method == 'POST':
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('users:login')
+    else:
+        form = SignupForm()
+
+    return render(
+        request=request,
+        template_name = 'users/signup.html',
+        context={'form' : form}
+    )
+
+
+@login_required
+def update_profile(request):
+    """ Update a user's profile view. """
+    profile = request.user.profile
+
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+    # create a form instance and populate it with data from the request:
+        form = ProfileForm(request.POST, request.FILES)
+        # check whether it's valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            # ...
+            # redirect to a new URL:
+            data = form.cleaned_data
+
+            profile.website = data['website']
+            profile.phone_number = data['phone_number']
+            profile.biography = data['biography']
+            profile.picture = data['picture']
+            profile.save()
+
+            url = reverse('users:detail', kwargs={'username': request.user.username})
+            return redirect(url)
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form= ProfileForm()
+
+    return render(
+        request=request,
+        template_name='users/update_profile.html',
+        context={
+            'profile': profile,
+            'user': request.user,
+            'form': form
+        }
+    )
+
+
+@login_required
+def logout_view(request):
+    """ Logout a user """
+    logout(request)
+    # Redirect to a success page.
+    return redirect('users:login')
+```
+
+y para establecer que al dar click sobre la foto del usuario automaticamente se va a trasladar hacia el perfil se modifica el template **nav.html**
+
+![assets/132.png](assets/132.png)
+
+```
+{% load static %}
+<nav class="navbar navbar-expand-lg fixed-top" id="main-navbar">
+    <div class="container">
+
+        <a class="navbar-brand pr-5" style="border-right: 1px solid #efefef;" href=" {% url "posts:feed" %}">
+            <img src="{% static "img/instagram.png" %}" height="45" class="d-inline-block align-top"/>
+        </a>
+
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav mr-auto">
+
+                <li class="nav-item">
+                    <a href="{% url "users:detail" request.user.username %}">
+                        {% if request.user.profile.picture %}
+                        <img src="{{ request.user.profile.picture.url }}" height="35" class="d-inline-block align-top rounded-circle"/>
+                        {% else %}
+                        <img src="{% static 'img/default-profile.png' %}" height="35" class="d-inline-block align-top rounded-circle"/>
+                        {% endif %}
+                    </a>
+                </li>
+
+                <li class="nav-item nav-icon">
+                    <a href="{% url "posts:create_post" %}">
+                        <i class="fas fa-plus"></i>
+                    </a>
+                </li>
+
+                <li class="nav-item nav-icon">
+                    <a href="{% url "users:logout" %}">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+</nav>
+```
+
+![assets/131.png](assets/131.png)
+
+y ahora para hacer click sobre cualquier usuario y entrar al perfil se modifica **feed.html**
+
+![assets/133.png](assets/133.png)
+
+```
+{% extends "base.html" %}
+
+{% block head_content %}
+    <title>Platzigram</title>
+{% endblock%}
+
+{% block container %}
+    <div class="container">
+        <div class="row">
+
+            {% for post in posts %}
+            <div class="col-sm-12 col-md-8 offset-md-2 mt-5 p-0 post-container">
+                <div class="media pt-3 pl-3 pb-1">
+                    <a href="{% url "users:detail" post.user.username %}">
+                    <img class="mr-3 rounded-circle" height="35" src="{{ post.profile.picture.url }}" alt="{{ post.user.get_full_name }}">
+                    </a>
+                    <div class="media-body">
+                        <p style="margin-top: 5px;">{{ post.user.get_full_name  }}</p>
+                    </div>
+                </div>
+
+                <img style="width: 100%;" src="{{ post.photo.url }}" alt="{{ post.title }}">
+
+                <p class="mt-1 ml-2" >
+                    <a href="" style="color: #000; font-size: 20px;">
+                        <i class="far fa-heart"></i>
+                    </a> 30 likes
+                </p>
+                <p class="ml-2 mt-0 mb-2">
+                    <b>{{ post.title }}</b> - <small>{{ post.created }}</small>
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
+```
+
+y por ultimo para recorrer cada post en cada usuario agregar a `detail.html` lo siguiente
+
+```
+    <div class="container" id="user-posts">
+        <div class="row mt-3">
+            {% for post in posts %}
+            <div class="col-sm-4 pt-5 pb-5 pr-5 pl-5 d-flex justify-content-center align-items-center">
+                <a href="" class="border">
+                    <img src="{{ post.photo.url }}" alt="{{ post.title }}" class="img-fluid"/>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+```
+
+![assets/134.png](assets/134.png)
+
+![assets/135.png](assets/135.png)
+
+Ahora se va a agregar ListView a **Platzigram/posts/views.py** para listar los posts de la manera en que lo estable Django, el cual se puede consultar con la documentacion y se cambia la funcion que anteriormente se llamaba `list_posts` por la clase `PostFeedView()`, se importa `from django.contrib.auth.mixins import LoginRequiredMixin` para requerir que al ver las listas de posts este logueado el usuario y se importa `from django.views.generic import ListView` para crear la clase y establecer los parametros de vista y orden 
+
+```
+"""Post views.  """
+
+# Django
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView
+
+#Models
+
+from posts.models import Post
+
+#Forms
+from posts.forms import PostForm
+
+
+class PostsFeedView(LoginRequiredMixin, ListView):
+    """ Return all published posts """
+
+    template_name= 'posts/feed.html'
+    model= Post
+    ordering = ('-created',)
+    paginate_by = 2
+    context_object_name = 'posts'
+
+
+@login_required
+def create_post(request):
+    """ create new post view """
+    if request.method == 'POST':
+        form = PostForm(request.POST, request.FILES) 
+        if form.is_valid():
+            form.save()
+            return redirect('posts:feed')
+    
+    else:
+        form = PostForm()
+
+    return render(
+        request= request,
+        template_name = 'posts/new.html',
+        context={
+            'form' : form,
+            'user' : request.user,
+            'profile' : request.user.profile
+        }
+    )
+```
+
+Al haber cambiado la funcion `list_post` tambien cambia la funcion establecida en **Platzigram/platzigram/urls.py** cambia         
+
+`view= views.list_posts,` por `view= views.PostsFeedView.as_view(),`
+
+nuevamente comprobar que los posts esten cargando en el navegador
+
+![assets/136.png](assets/136.png)
+
+**Reto:** Hacer el detalle de los posts con DetailView

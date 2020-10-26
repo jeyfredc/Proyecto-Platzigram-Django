@@ -11,7 +11,9 @@
             {% for post in posts %}
             <div class="col-sm-12 col-md-8 offset-md-2 mt-5 p-0 post-container">
                 <div class="media pt-3 pl-3 pb-1">
+                    <a href="{% url "users:detail" post.user.username %}">
                     <img class="mr-3 rounded-circle" height="35" src="{{ post.profile.picture.url }}" alt="{{ post.user.get_full_name }}">
+                    </a>
                     <div class="media-body">
                         <p style="margin-top: 5px;">{{ post.user.get_full_name  }}</p>
                     </div>
