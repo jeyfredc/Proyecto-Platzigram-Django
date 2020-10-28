@@ -18,7 +18,7 @@
 
 [Clase 9 Patrones de diseño y Django](#Clase-9-Patrones-de-diseño-y-Django)
 
-[Clase 10 La M en el MTV(model, Template, View)](#Clase-10-La-M-en-el-MTV(model-Template-View))
+[Clase 10 La M en el MTV](#Clase-10-La-M-en-el-MTV)
 
 [Clase 11 El ORM de Django](#Clase-11-El-ORM-de-Django)
 
@@ -66,7 +66,7 @@
 
 [Clase 33 Configurar el servidor](#Clase-33-Configurar-el-servidor)
 
-[Clase 34 Preparación del VPS (en AWS)](#Clase-34-Preparación-del-VPS-(en-AWS))
+[Clase 34 Preparación del VPS (en AWS)](#Clase-34-Preparación-del-VPS-en-AWS)
 
 
 ## Clase 1 Introducción al curso
@@ -1118,7 +1118,7 @@ El patrón más común para el desarrollo web es MVC (Model, View, Controller) e
 
 Django implementa un patrón similar llamado MTV (Model, Template, View). Donde el modelo es el que define la estructura de los datos, el Template es la logica de la presentacion de los datos y la vista es la encargada de traer los datos y pasarlos por el template.
 
-## Clase 10 La M en el MTV(model, Template, View)
+## Clase 10 La M en el MTV
 
 
 Para entender mejor esta clase descargar [DB Browser for Sqlite](https://sqlitebrowser.org/dl/)
