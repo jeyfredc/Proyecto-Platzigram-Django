@@ -89,6 +89,12 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'DB_DRIVE': 'pgsql'
+        'DB_HOST': 'ec2-34-232-24-202.compute-1.amazonaws.com'
+        'DB_NAME': 'd3hs076c0eggv'
+        'DB_USER': 'suaxucaixvrbty'
+        'DB_PASS': 'd106e72d8a6156929117752220c0f85612f6d565b569bb94cde571b941d801f6'
+        'DB_PORT': '5432'
     }
 }
 
