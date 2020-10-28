@@ -60,9 +60,9 @@
 
 [Clase 30 Generic auth views](#Clase-30-Generic-auth-views)
 
-[Clase 31 Arquirectura / Conceptos / Componentes](#Clase-31-Arquirectura/Conceptos/Componentes)
+[Clase 31 Arquirectura, Conceptos, Componentes](#Clase-31-Arquirectura-Conceptos-Componentes)
 
-[Clase 32 ¿Cómo conectar Django a una base de datos?](#Clase-32-¿-Cómo-conectar-Django-a-una-base-de-datos-?)
+[Clase 32 ¿Cómo conectar Django a una base de datos?](#Clase-32-¿Cómo-conectar-Django-a-una-base-de-datos?)
 
 [Clase 33 Configurar el servidor](#Clase-33-Configurar-el-servidor)
 
@@ -5867,7 +5867,7 @@ Ahora hacer la prueba en el navegador haciendo login y logout
 
 De esta forma queda lista la aplicacion **PLatzigram!!**
 
-## Clase 31 Arquirectura / Conceptos / Componentes
+## Clase 31 Arquirectura, Conceptos, Componentes
 
 Liberar un proyecto de Django a producción es una tarea bastante sencilla pero que puede confundir a muchos la primera vez que se intente (a mi me sucedió). El objetivo de esta lectura es tener una breve a introducción a la arquitectura de un proyecto de Django corriendo en un servidor de producción (un servidor de verdad) y que consecuentemente los siguientes tutoriales de configuración tengan más sentido al momento de que los leas.
 
