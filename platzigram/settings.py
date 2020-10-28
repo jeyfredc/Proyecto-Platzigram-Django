@@ -88,6 +88,7 @@ from decouple import config
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
+        'DRIVE': 'pgsql',
         'NAME': 'd3hs076c0eggv',
         'USER': 'suaxucaixvrbty',
         'PASSWORD': 'd106e72d8a6156929117752220c0f85612f6d565b569bb94cde571b941d801f6',
