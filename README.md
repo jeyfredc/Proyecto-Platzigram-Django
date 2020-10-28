@@ -56,7 +56,7 @@
 
 [Clase 28 Protegiendo la vista de perfil, Detail View y List View](#Clase-28-Protegiendo-la-vista-de-perfil-Detail-View-y-List-View)
 
-[]()
+[Clase 29 CreateView, FormView y UpdateView](#Clase-29-CreateView-FormView-y-UpdateView)
 
 ## Clase 1 Introducción al curso
 
@@ -4973,3 +4973,628 @@ nuevamente comprobar que los posts esten cargando en el navegador
 ![assets/136.png](assets/136.png)
 
 **Reto:** Hacer el detalle de los posts con DetailView
+
+## Clase 29 CreateView, FormView y UpdateView
+
+En esta clase incorporamos la paginación de posts utilizando page_obj, bootstrap y variables del contexto. Adicionalmente resolvemos el reto de la clase anterior usando DetailView. Remplazamos render y redirect por CreateView para los posts. Implementaremos FormView en sustitución del formulario de registro Signup que teníamos hasta ahora con el fin de optimizar el código y finalmente optimizamos la vista de actualización del perfil con UpdateView.
+
+Para la paginacion se implementa otra seccion de codigo en el archivo **feed.html** que se encuentra en **Platzigram/templates/posts/feed.html** y despues del ultimo `</div>` se agrega un nav para la paginacion y que se pueda pasar de la pagina 1 a la 2 o mas y viceversa.
+
+```
+<nav>
+    <ul class="pagination justify-content-end">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                Previous
+            </a>
+        </li>
+        {% endif %}
+        <li class="page-item">
+            <a class="page-link" href="#">
+                {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </a>
+        </li>
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                Next
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+```
+
+![assets/137.png](assets/137.png)
+
+el codigo bootstrap para la paginacion se podria implementar mas adelante en otro lado por  tanto el codigo anterior se pasa a un template que se va a llamar **pagination.html** y para que **feed.html** lo use simplemente debajo del `</div>` se agrega una linea de codigo con lo siguiente
+
+`{% include "pagination.html" %}`
+
+de esta foma va a seguir funcionando la paginacion
+
+Para solucionar el reto de la clase anterior se debe solucionar que al dar click en una foto se debe poder acceder al detalle, pero de momento no funciona.
+
+abrir **Platzigram/posts/urls.py** y crear un nuevo path.
+
+```
+    path(
+        route='posts/<int:pk>/',
+        view= views.PostDetailView.as_view(),
+        name='detail'
+        ),
+```
+
+Despues pasar a **Platzigram/posts/views.py** para crear la clase `PostDetailView` la cual debe heredar de `LoinRequiredMixin` y `DetailView`
+
+```
+class PostDetailView(LoginRequiredMixin, DetailView):
+    """ Return post detail """
+    template_name= 'posts/detail.html'
+    queryset = Post.objects.all()
+    context_object_name= 'post'
+```
+
+Se crea un template **detail.html**  que va a estar ubicado en **Platzigram/templates/posts/detail.html** el cual lleva el siguiente bloque de codigo que hereda a su vez de **post_card.html** y el cual tambien debe ser creado 
+
+```
+{% extends "base.html" %}
+
+{% block head_content %}
+    <title>Platzigram</title>
+{% endblock%}
+<!DOCTYPE html>
+{% block container %}
+
+    <div class="container">
+        <div class="row">
+            {% include "posts/post_card.html" %}
+        </div>
+    </div>
+
+{% endblock %}
+```
+
+y ahora se crea **post_card.html** dentro del mismo folder y lleva el siguiente bloque de codigo 
+
+```
+<div class="col-sm-12 col-md-8 offset-md-2 mt-5 p-0 post-container">
+    <div class="media pt-3 pl-3 pb-1">
+        <a href="{% url "users:detail" post.user.username %}">
+            <img class="mr-3 rounded-circle" height="35" src="{{ post.profile.picture.url }}" alt="{{ post.user.get_full_name }}">
+        </a>
+        <div class="media-body">
+            <p style="margin-top: 5px;">{{ post.user.get_full_name  }}</p>
+        </div>
+    </div>
+
+    <img style="width: 100%;" src="{{ post.photo.url }}" alt="{{ post.title }}">
+
+    <p class="mt-1 ml-2" >
+        <a href="" style="color: #000; font-size: 20px;">
+            <i class="far fa-heart"></i>
+        </a> 30 likes
+    </p>
+    <p class="ml-2 mt-0 mb-2">
+        <b>{{ post.title }}</b> - <small>{{ post.created }}</small>
+    </p>
+</div>
+```
+
+Como el codigo de **post_card.html** se puede reutilzar tambien se modifica **feed.html** por lo siguiente
+
+```
+{% extends "base.html" %}
+
+{% block head_content %}
+    <title>Platzigram</title>
+{% endblock%}
+
+{% block container %}
+    <div class="container">
+        <div class="row">
+
+            {% for post in posts %}
+                {% include "posts/post_card.html" %}
+            {% endfor %}
+        </div>
+    </div>
+
+    {% include "pagination.html" %}
+
+{% endblock %}
+```
+
+Debajo de `PostDetailView` **Platzigram/posts/views.py** pasar a crear la clase `CreatePostView` para reemplazar la funcion `create_post`, esta va a contener `LoginRequiredMixin` y `CreateView`, para hacer uso de CreateView se debe agregar a `from django.views.generic import CreateView, DetailView, ListView`, se va a establecer una variable success_url que va a redirigir hacia `posts:feed` con la funcion reverse_lazy que se utiliza para hacer una comprobacion y se tiene que importar con `from django.urls import reverse_lazy`
+
+
+hacer uso de la [documentacion](https://docs.djangoproject.com/en/3.1/ref/class-based-views/generic-editing/#createview) para implementarlo. La clase queda de la siguiente forma
+
+```
+class PostCreateView(LoginRequiredMixin, CreateView):
+    template_name = 'posts/new.html'
+    form_class = PostForm
+    success_url = reverse_lazy('posts:feed')
+
+
+    def get_context_data(self, **kwargs):
+        """ Add user and profile to context. """
+
+        context = super(). get_context_data(**kwargs)
+        context['user'] = self.request.user
+        context['profile'] = self.request.user.profile
+        return context
+```
+
+**Platzigram/posts/views.py** queda asi 
+
+```
+"""Post views.  """
+
+# Django
+from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import CreateView, DetailView, ListView 
+
+#Forms
+from posts.forms import PostForm
+
+#Models
+from posts.models import Post
+
+
+
+class PostFeedView(LoginRequiredMixin, ListView):
+    """ Return all published posts """
+
+    template_name= 'posts/feed.html'
+    model= Post
+    ordering = ('-created',)
+    paginate_by = 30
+    context_object_name = 'posts'
+
+
+class PostDetailView(LoginRequiredMixin, DetailView):
+    """Return post detail."""
+
+    template_name = 'posts/detail.html' 
+    queryset = Post.objects.all()
+    context_object_name = 'posts'
+
+
+class PostCreateView(LoginRequiredMixin, CreateView):
+    template_name = 'posts/new.html'
+    form_class = PostForm
+    success_url = reverse_lazy('posts:feed')
+
+
+    def get_context_data(self, **kwargs):
+        """ Add user and profile to context. """
+
+        context = super(). get_context_data(**kwargs)
+        context['user'] = self.request.user
+        context['profile'] = self.request.user.profile
+        return context
+
+
+```
+
+Ahora hay que arreglar **Platzigram/posts/urls.py** el cual queda asi 
+
+```
+""" Posts urls """
+
+#Django
+from django.urls import path
+
+#Views
+from posts import views
+
+urlpatterns = [
+
+    path(
+        route='',
+        view= views.PostFeedView.as_view(),
+        name='feed'
+    ),
+
+    path(
+        route='posts/new/',
+        view= views.PostCreateView.as_view(),
+        name='create_post'
+    ),
+
+        path(
+        route='posts/<int:pk>/',
+        view=views.PostDetailView.as_view(),
+        name='detail'
+    )
+
+]
+```
+
+De esta forma ya se debe cargar la vista para crear usuarios
+
+![assets/138.png](assets/138.png)
+
+Se puede mejorar tambien la funcion signup de la vista que esta en **Platzigram/users/views.py** y hacer uso de la clase [FormView](https://docs.djangoproject.com/en/3.1/ref/class-based-views/generic-editing/#formview), para esto hay que importar `FormView` agregandola a `from django.views.generic import DetailView, FormView` y se crea la clase `class SignupView(FormView):` que va a reemplazar a la funcion  `signup_view` y tambien se debe implementar la funcion `form_valid(self, form):` para que al hacer sign up el usuario se pueda crear con el perfil, esto se debe implementar porque antes se hace una validacion
+
+```
+class SignupView(FormView):
+    """ Users Sign up view """
+    
+    template_name = 'users/signup.html'
+    form_class = SignupForm
+    success_url = reverse_lazy('users:login')
+```
+
+**Platzigram/users/views.py** queda asi 
+
+```
+""" Users views. """
+
+# Django
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, redirect
+from django.urls import reverse, reverse_lazy
+from django.views.generic import DetailView, FormView
+
+#Models
+from django.contrib.auth.models import User
+from posts.models import Post
+
+#Forms
+from users.forms import ProfileForm, SignupForm
+
+
+class UserDetailView(LoginRequiredMixin, DetailView):
+    """ User detail view """
+
+    template_name = 'users/detail.html'
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+    queryset = User.objects.all()
+    context_object_name = 'user'
+
+    def get_context_data(self, **kwargs):
+        """ User detail view. """
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+        user = self.get_object()
+        # Add in a QuerySet of all the books
+        context['posts'] = Post.objects.filter(user=user).order_by('-created')
+        return context
+
+
+def login_view(request):
+    """ Login view """
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return redirect('posts:feed')
+        else:
+            return render(request, 'users/login.html', {'error': 'Invalid username and password'})
+            
+    return render(request, 'users/login.html')
+
+
+class SignupView(FormView):
+    """ Users Sign up view """
+    
+    template_name = 'users/signup.html'
+    form_class = SignupForm
+    success_url = reverse_lazy('users:login')
+
+
+    def form_valid(self, form):
+        """ Save form data """
+        form.save()
+        return super().form_valid(form)
+
+
+@login_required
+def update_profile(request):
+    """ Update a user's profile view. """
+    profile = request.user.profile
+
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+    # create a form instance and populate it with data from the request:
+        form = ProfileForm(request.POST, request.FILES)
+        # check whether it's valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            # ...
+            # redirect to a new URL:
+            data = form.cleaned_data
+
+            profile.website = data['website']
+            profile.phone_number = data['phone_number']
+            profile.biography = data['biography']
+            profile.picture = data['picture']
+            profile.save()
+
+            url = reverse('users:detail', kwargs={'username': request.user.username})
+            return redirect(url)
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form= ProfileForm()
+
+    return render(
+        request=request,
+        template_name='users/update_profile.html',
+        context={
+            'profile': profile,
+            'user': request.user,
+            'form': form
+        }
+    )
+
+
+@login_required
+def logout_view(request):
+    """ Logout a user """
+    logout(request)
+    # Redirect to a success page.
+    return redirect('users:login')
+
+```
+
+Ahora hay que arreglar **Platzigram/users/urls.py** el cual queda asi 
+
+```
+""" Users urls """
+
+#Django
+from django.urls import path
+#Views
+from users import views
+
+urlpatterns = [
+
+    #Mangement
+    path(
+        route = 'login/', 
+        view = views.login_view,
+        name = 'login'
+    ),
+
+    path(
+        route = 'logout/',
+        view = views.logout_view, 
+        name = 'logout'
+    ),
+
+    path(
+        route = 'signup/', 
+        view= views.SignupView.as_view(), 
+        name = 'signup'
+    ),
+
+    path(
+        route = 'me/profile/', 
+        view = views.update_profile, 
+        name = 'update_profile'
+    ),
+
+    #posts
+    path(
+        route = '<str:username>/',
+        view = views.UserDetailView.as_view(),
+        name = 'detail'
+    ),
+]
+```
+
+A continuacion va a salir un error que indica que se debe actualizar la redireccion en **midleware.py**
+
+![assets/139.png](assets/139.png)
+
+y se debe cambiar 
+
+```
+if request.path not in [reverse('update_profile'), reverse('logout')]:
+                        return redirect('update_profile')
+```
+
+por 
+
+```
+if request.path not in [reverse('users:update_profile'), reverse('users:logout')]:
+                        return redirect('users:update_profile')
+```
+
+Despues de esto ya deja ingresar a la creacion del perfil de usuario para actualizar, foto,website, biografia
+
+
+Por ultimo se implementa la clase `class UpdateprofileView`la cual hereda de `LoginRequiredMixin` y `UpdateView`, esta va a reemplazar la funcion `update_profile` . Para hacer uso de U`pdateView` se debe agregar a `from django.views.generic import DetailView, FormView, UpdateView` y seguir todos los pasos que indica la documentacion, que de por si son muy parecidos a las otras clases ya implementadas en **Platzigram/users/views.py**.
+
+Se debe importar el Profile de users `from users.models import Profile`
+
+Se debe eliminar `ProfileForm` y solo dejar SignupForm `from users.forms import SignupForm` porque el otro formulario esta cumpliendo con la funcion que hacia `ProfileForm`, es decir que tambien se debe borrar la clase de **Platzigram/users/forms.py**
+
+Se sobreescribe el metodo `get_object` que es el encargado de hacer el query y regrese el perfil del usuario
+
+```
+    def get_object(self):
+        """ Return user's profile """
+        return self.request.user.Profile
+```
+y luego se necesita implementar el metodo `get_succes_url`, para pasar los argumentos que requiere traer el perfil del usuario
+
+```
+    def get_success_url(self):
+        """ Return to user's profile """
+        username = self.object.user.username
+        return reverse('users:detail', kwargs={'username' : username})
+```
+
+La clase queda asi 
+
+```
+class UpdateProfileView(LoginRequiredMixin, UpdateView):
+    """ Update View """
+
+    template_name = 'users/update_profile.html'
+    model = Profile
+    fields = ['website', 'phone_number', 'biography', 'picture']
+
+    
+    def get_object(self):
+        """ Return user's profile """
+        return self.request.user.Profile
+    
+    def get_success_url(self):
+        """ Return to user's profile """
+        username = self.object.user.username
+        return reverse('users:detail', kwargs={'username' : username})
+```
+
+y el archivo **Platzigram/users/views.py** queda mucho mas corto y legible 
+
+```
+""" Users views. """
+
+# Django
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, redirect
+from django.urls import reverse, reverse_lazy
+from django.views.generic import DetailView, FormView, UpdateView
+
+#Models
+from django.contrib.auth.models import User
+from posts.models import Post
+from users.models import Profile
+
+#Forms
+from users.forms import SignupForm
+
+
+class UserDetailView(LoginRequiredMixin, DetailView):
+    """ User detail view """
+
+    template_name = 'users/detail.html'
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+    queryset = User.objects.all()
+    context_object_name = 'user'
+
+    def get_context_data(self, **kwargs):
+        """ User detail view. """
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+        user = self.get_object()
+        # Add in a QuerySet of all the books
+        context['posts'] = Post.objects.filter(user=user).order_by('-created')
+        return context
+
+
+def login_view(request):
+    """ Login view """
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return redirect('posts:feed')
+        else:
+            return render(request, 'users/login.html', {'error': 'Invalid username and password'})
+            
+    return render(request, 'users/login.html')
+
+
+class SignupView(FormView):
+    """ Users Sign up view """
+    
+    template_name = 'users/signup.html'
+    form_class = SignupForm
+    success_url = reverse_lazy('users:login')
+
+
+    def form_valid(self, form):
+        """ Save form data """
+        form.save()
+        return super().form_valid(form)
+
+
+class UpdateProfileView(LoginRequiredMixin, UpdateView):
+    """ Update View """
+
+    template_name = 'users/update_profile.html'
+    model = Profile
+    fields = ['website', 'phone_number', 'biography', 'picture']
+
+    
+    def get_object(self):
+        """ Return user's profile """
+        return self.request.user.Profile
+    
+    def get_success_url(self):
+        """ Return to user's profile """
+        username = self.object.user.username
+        return reverse('users:detail', kwargs={'username' : username})
+
+
+@login_required
+def logout_view(request):
+    """ Logout a user """
+    logout(request)
+    # Redirect to a success page.
+    return redirect('users:login')
+```
+
+por ultimo hay que configurar **Platzigram/users/urls.py** el cual queda asi 
+
+```
+""" Users urls """
+
+#Django
+from django.urls import path
+#Views
+from users import views
+
+urlpatterns = [
+
+    #Mangement
+    path(
+        route = 'login/', 
+        view = views.login_view,
+        name = 'login'
+    ),
+
+    path(
+        route = 'logout/',
+        view = views.logout_view, 
+        name = 'logout'
+    ),
+
+    path(
+        route = 'signup/', 
+        view= views.SignupView.as_view(), 
+        name = 'signup'
+    ),
+
+    path(
+        route = 'me/profile/', 
+        view = views.UpdateProfileView, 
+        name = 'update_profile'
+    ),
+
+    #posts
+    path(
+        route = '<str:username>/',
+        view = views.UserDetailView.as_view(),
+        name = 'detail'
+    ),
+]
+```

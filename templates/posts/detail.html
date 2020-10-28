@@ -3,17 +3,13 @@
 {% block head_content %}
     <title>Platzigram</title>
 {% endblock%}
-
+<!DOCTYPE html>
 {% block container %}
+
     <div class="container">
         <div class="row">
-
-            {% for post in posts %}
-                {% include "posts/post_card.html" %}
-            {% endfor %}
+            {% include "posts/post_card.html" %}
         </div>
     </div>
-
-    {% include "pagination.html" %}
 
 {% endblock %}

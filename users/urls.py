@@ -22,13 +22,13 @@ urlpatterns = [
 
     path(
         route = 'signup/', 
-        view= views.signup_view, 
+        view= views.SignupView.as_view(), 
         name = 'signup'
     ),
 
     path(
         route = 'me/profile/', 
-        view = views.update_profile, 
+        view = views.UpdateProfileView, 
         name = 'update_profile'
     ),
 
