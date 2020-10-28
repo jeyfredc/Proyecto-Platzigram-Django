@@ -60,17 +60,14 @@
 
 [Clase 30 Generic auth views](#Clase-30-Generic-auth-views)
 
-[Clase 31 Arquirectura / Conceptos / Componentes](#Clase-31-Arquirectura-/-Conceptos-/-Componentes)
+[Clase 31 Arquirectura / Conceptos / Componentes](#Clase-31-Arquirectura/Conceptos/Componentes)
 
-[Clase 32 ¿Cómo conectar Django a una base de datos?](#Clase-32-¿Cómo-conectar-Django-a-una-base-de-datos?)
+[Clase 32 ¿Cómo conectar Django a una base de datos?](#Clase-32-¿-Cómo-conectar-Django-a-una-base-de-datos-?)
 
 [Clase 33 Configurar el servidor](#Clase-33-Configurar-el-servidor)
 
 [Clase 34 Preparación del VPS (en AWS)](#Clase-34-Preparación-del-VPS-(en-AWS))
 
-[]()
-
-[]()
 
 ## Clase 1 Introducción al curso
 
