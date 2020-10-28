@@ -97,7 +97,7 @@ DATABASES = {
     }
 }
 
-
+ATOMIC_REQUESTS=True
 
 
 # DATABASES = {
