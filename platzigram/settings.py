@@ -93,9 +93,6 @@ DATABASES = {
         'PASSWORD': 'd106e72d8a6156929117752220c0f85612f6d565b569bb94cde571b941d801f6',
         'HOST': 'ec2-34-232-24-202.compute-1.amazonaws.com',
         'PORT': '5432',
-        'OPTIONS': {
-            'driver': 'pgsql',
-        },
     }
 }
 
