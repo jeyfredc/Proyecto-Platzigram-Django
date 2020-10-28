@@ -10,13 +10,13 @@ urlpatterns = [
     #Mangement
     path(
         route = 'login/', 
-        view = views.login_view,
+        view = views.LoginView.as_view(),
         name = 'login'
     ),
 
     path(
         route = 'logout/',
-        view = views.logout_view, 
+        view = views.LogoutView.as_view(), 
         name = 'logout'
     ),
 

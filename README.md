@@ -58,6 +58,8 @@
 
 [Clase 29 CreateView, FormView y UpdateView](#Clase-29-CreateView-FormView-y-UpdateView)
 
+[Clase 30 Generic auth views](#Clase-30-Generic-auth-views)
+
 ## Clase 1 Introducción al curso
 
 Los temas que se van a ver en el curso van desde url, vistas y sistemas de templates,  hasta formularios, middleware y vistas basadas en clases.
@@ -5598,3 +5600,260 @@ urlpatterns = [
     ),
 ]
 ```
+
+## Clase 30 Generic auth views
+
+Django cuenta con varias vistas genéricas basadas en clases para resolver muchas de las funcionalidades relacionadas con la autenticación, como es el caso de:
+
+- login
+
+- logout
+
+- password_change
+
+- password_change_done
+
+- password_reset
+
+- password_reset_done
+
+- password_reset_confirm
+
+- password_reset_complete
+
+Estas vistas genéricas nos permiten ahorrarnos varias líneas de código, además de que incluyen características adicionales de mucha utilidad.
+
+Asi que se va a implementar la clase `LoginView` para reemplazar la funcion `login_view`en **Platzigram/users/views.py** siguiendo con la [documentacion](https://docs.djangoproject.com/en/3.1/topics/auth/default/#module-django.contrib.auth.views) para evitar muchas lineas de codigo que llevaban la logica ya que Django propociona esa facilidad.
+
+Se importa `from django.contrib.auth import views as auth_views`, se implementa la clase heredando de `auth_views.LoginView`
+
+```
+class LoginView(auth_views.LoginView):
+    """ Login view """
+    template_name = 'users/login.html'
+```
+
+Se hace una correccion de logica en el template **login.html** ubicado en **Platzigram/templates/users/login.html**
+
+```
+{% extends "users/base.html" %}
+
+{% block head_content %}
+<title>Platzigram sign in</title>
+{% endblock %}
+
+{% block container %}
+
+    {% if form.errors %}
+        <p class="alert alert-danger"> 
+            Your username and password didn't match. Please try again.    
+        </p>
+    {% endif %}
+
+    <form method="POST" action="{% url "users:login" %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <input class="form-control" type="text" placeholder="Username" name="username">
+        </div>
+
+        <div class="form-group">
+            <input class="form-control" type="password" placeholder=" Password" name="password"">
+        </div>
+
+        <button class="btn btn-primary btn-block mt-5" type="submit">Sign in!</button>
+
+    </form>
+
+    <p class="mt-4">Don't have an account yet? <a href="{% url "users:signup" %}">Sign up here.</a></p>
+
+{% endblock %}
+```
+
+Luego pasar a urls.py en **Platzigram/users/urls.html**, corregir 
+
+```
+    path(
+        route = 'login/', 
+        view = views.login_view,
+        name = 'login'
+    ),
+
+```
+
+por 
+
+```
+    path(
+        route = 'login/', 
+        view = views.LoginView.as_view(),
+        name = 'login'
+    ),
+
+```
+
+y despues de esto hacer la prueba haciendo logout y login
+
+posiblemente cuando se este haciendo login salga el siguiente error
+
+![assets/140.png](assets/140.png)
+
+para solucionarlo en el archivo **settings.py** se debe configurar la url como lo indica la documentacion y al final se coloca lo siguiente 
+
+`LOGIN_REDIRECT_URL = '/'`
+
+por defecto la url en el navegador queda asi con el error http://localhost:8000/accounts/profile/
+borrarla y reemplazarla por http://localhost:8000/ de esta forma ya debe estar en el feed y nuevamente hacer la pŕueba haciendo logout y login verificando que todo cargue normalmente
+
+Por ultimo se implementa la clase `LogoutView` reemplazando la funcion `logout_view` para esto se quita de **Platzigram/users/views.py** las siguientes librerias porque no van a ser requeridas
+
+`from django.shortcuts import render, redirect`
+
+`from django.contrib.auth import authenticate, login, logout`
+
+`from django.contrib.auth.decorators import login_required`
+
+la clase queda de la siguiente forma 
+
+```
+class LogoutView(LoginRequiredMixin, auth_views.LogoutView):
+    """ Logout view """
+
+    template_name = 'users/logged_out.html'
+```
+
+**Platzigram/users/views.py** queda asi 
+
+```
+""" Users views. """
+
+# Django
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse, reverse_lazy
+from django.views.generic import DetailView, FormView, UpdateView
+from django.contrib.auth import views as auth_views
+#Models
+from django.contrib.auth.models import User
+from posts.models import Post
+from users.models import Profile
+
+#Forms
+from users.forms import SignupForm
+
+
+class UserDetailView(LoginRequiredMixin, DetailView):
+    """ User detail view """
+
+    template_name = 'users/detail.html'
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+    queryset = User.objects.all()
+    context_object_name = 'user'
+
+    def get_context_data(self, **kwargs):
+        """ User detail view. """
+        # Call the base implementation first to get a context
+        context = super().get_context_data(**kwargs)
+        user = self.get_object()
+        # Add in a QuerySet of all the books
+        context['posts'] = Post.objects.filter(user=user).order_by('-created')
+        return context
+
+
+class LoginView(auth_views.LoginView):
+    """ Login view """
+    template_name = 'users/login.html'
+
+
+class SignupView(FormView):
+    """ Users Sign up view """
+    
+    template_name = 'users/signup.html'
+    form_class = SignupForm
+    success_url = reverse_lazy('users:login')
+
+
+    def form_valid(self, form):
+        """ Save form data """
+        form.save()
+        return super().form_valid(form)
+
+
+class UpdateProfileView(LoginRequiredMixin, UpdateView):
+    """ Update View """
+
+    template_name = 'users/update_profile.html'
+    model = Profile
+    fields = ['website', 'phone_number', 'biography', 'picture']
+
+    
+    def get_object(self):
+        """ Return user's profile """
+        return self.request.user.Profile
+    
+    def get_success_url(self):
+        """ Return to user's profile """
+        username = self.object.user.username
+        return reverse('users:detail', kwargs={'username' : username})
+
+
+class LogoutView(LoginRequiredMixin, auth_views.LogoutView):
+    """ Logout view """
+
+    template_name = 'users/logged_out.html'
+
+```
+
+Se configura **Platzigram/users/urls.py** que quedan asi 
+
+```
+""" Users urls """
+
+#Django
+from django.urls import path
+#Views
+from users import views
+
+urlpatterns = [
+
+    #Mangement
+    path(
+        route = 'login/', 
+        view = views.LoginView.as_view(),
+        name = 'login'
+    ),
+
+    path(
+        route = 'logout/',
+        view = views.LogoutView.as_view(), 
+        name = 'logout'
+    ),
+
+    path(
+        route = 'signup/', 
+        view= views.SignupView.as_view(), 
+        name = 'signup'
+    ),
+
+    path(
+        route = 'me/profile/', 
+        view = views.UpdateProfileView, 
+        name = 'update_profile'
+    ),
+
+    #posts
+    path(
+        route = '<str:username>/',
+        view = views.UserDetailView.as_view(),
+        name = 'detail'
+    ),
+]
+```
+
+por ultimo en **setting.py** se agrega la URL al final con la variable que se configuro para el login
+
+`LOGOUT_REDIRECT_URL = LOGIN_URL`
+
+Ahora hacer la prueba en el navegador haciendo login y logout
+
+De esta forma queda lista la aplicacion **PLatzigram!!**
