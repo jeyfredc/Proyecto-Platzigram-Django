@@ -87,8 +87,6 @@ from decouple import config
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
         'DB_DRIVE': 'pgsql'
         'DB_HOST': 'ec2-34-232-24-202.compute-1.amazonaws.com'
         'DB_NAME': 'd3hs076c0eggv'
