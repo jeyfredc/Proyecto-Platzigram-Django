@@ -87,7 +87,7 @@ from decouple import config
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.sqlite3',
         'DRIVE': 'pgsql',
         'NAME': 'd3hs076c0eggv',
         'USER': 'suaxucaixvrbty',
