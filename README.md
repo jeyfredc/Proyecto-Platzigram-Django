@@ -5937,7 +5937,7 @@ ___
 
 4. Por último vamos a instalar las dependencias de **python, postgress, git y nginix** con el siguiente comando:
 
-`sudo apt-get install python3-pip python3-dev postgresql postgresql-contrib libpq-dev git nginx`
+`sudo apt install python3-pip python3-dev libpq-dev postgresql postgresql-contrib nginx curl`
 
 **Configurar PostgreSQL**
 ___

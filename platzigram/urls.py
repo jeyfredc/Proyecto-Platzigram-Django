@@ -15,4 +15,4 @@ urlpatterns = [
 
     path('users/', include(('users.urls', 'users'), namespace='users')),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT, settings.STATIC_ROOT)
