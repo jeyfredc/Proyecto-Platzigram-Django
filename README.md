@@ -5870,7 +5870,7 @@ De esta forma queda lista la aplicacion **[PLatzigram](https://platzigramjcc.her
 
 ___
 
-##¿Quieres conocer mas proyectos?
+## ¿Quieres conocer mas proyectos?
 
 Puedes visualizar mi portafolio en el siguiente enlace https://jeyfredc.github.io/Portafolio/
 
