@@ -1,5 +1,7 @@
 # Proyecto Platzigram Django
 
+## Tabla de Contenido
+
 [Clase 1 Introducción al curso](#Clase-1-Introducción-al-curso)
 
 [Clase 2 Historia de web development](#Clase-2-Historia-de-web-development)
@@ -77,6 +79,10 @@ El proyecto desarrollado será Platzigram y al final se va a realizar deploy en 
 
 En este proyectose implementara un sistema custom de usuarios, manejando la carga de media por usuario, perfil de usuario, paginacion y crear un middleware para asegurar que todos los perfiles de usuario esten completos durante el uso de la plataforma y manejo de sesiones.
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ![assets/1.png](assets/1.png)
 
 ## Clase 2 Historia de web development
@@ -104,6 +110,10 @@ Django nace en 2004 para crear y mantener sitios muy grandes, URLs bien diseñad
 - Django es open source.
 
 - Django tiene el concepto **(DRY(Don't Repeat Yourself))**, donde dice que si estas copiando y pegando algo en tu codigo, seguramente estas haciendo algo mal
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 3 Preparación del entorno de trabajo en Windows y Linux
 
@@ -152,6 +162,10 @@ sudo apt install python3-virtualenv
 1. Activar entorno virtual
 
 2. Correr `pip install django -U`
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 4 Creación del proyecto Platzigram / Tu primer Hola, mundo! en Django
 
@@ -583,6 +597,10 @@ def hi(request):
 
 Regresa la lista ordenada de números en formato json.
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Clase 6 Solución al reto - Pasando argumentos en la URL
 
 Continuando con las clases a continuacion se va a solucionar el reto de la clase pasada y ver otras formas de pasar argumentos a traves de las urls
@@ -778,6 +796,10 @@ y ahora si pasamos en el navegador otro argumento http://127.0.0.1:8000/hi/jeyfr
 
 ![assets/12.png](assets/12.png)
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Clase 7 Creación de la primera app
 
 Vamos a explorar el concepto de Apps en Django y crearemos nuestra primera app de Platzigram, que es la aplicacion de **posts** y tambien los archivos de apps, admin, views, models y  tests.
@@ -931,6 +953,10 @@ def list_posts(request):
 ```
 
 ![assets/15.png](assets/15.png)
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 8 Introducción al template system
 
@@ -1118,6 +1144,10 @@ El patrón más común para el desarrollo web es MVC (Model, View, Controller) e
 
 Django implementa un patrón similar llamado MTV (Model, Template, View). Donde el modelo es el que define la estructura de los datos, el Template es la logica de la presentacion de los datos y la vista es la encargada de traer los datos y pasarlos por el template.
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Clase 10 La M en el MTV
 
 
@@ -1273,6 +1303,10 @@ Por tanto nuevamente se debe ejecutar
 para ver que los cambios estan aplicados se puede abrir DB Browser for sqlite y abrir nuevamente el proyecto, donde debe aparecer una tabla llamada **posts_user**
 
 ![assets/27.png](assets/27.png)
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 11 El ORM de Django
 
@@ -1564,6 +1598,10 @@ Inserta mas usuarios a la base de datos que hemos construido en nuestro entorno 
 
 Crea un nuevo campo PAÍS en el modelo, inserta usuarios y haz filtros.
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Clase 12 Glosario
 
 - **ORM**: Object-relational mapping. Es el encargado de permitir el acceso y control de una base de datos relacional a través de una abstracción a clases y objetos.
@@ -1577,6 +1615,10 @@ Crea un nuevo campo PAÍS en el modelo, inserta usuarios y haz filtros.
 - **App**: Conjunto de código que se encarga de resolver una parte muy específica del proyecto, contiene sus modelos, vistas, urls, etc.
 
 - **Patrón de diseño**: Solución común a un problema particular.
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 13 Extendiendo el modelo de usuario
 
@@ -1685,6 +1727,10 @@ Borrar los archivos que se encuentren en **posts/migrations**, sin borrar el arc
 Borrar tambien el archivo de bases de datos que es **db.sqlite3** 
 
 **Nota:** Todo lo que se borro eran modelos de ejemplo
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 14 Implementación del modelo de usuarios de Platzigram
 
@@ -1827,6 +1873,10 @@ verificar si esta ingresando con http://127.0.0.1:8000/admin/
 y que la base de datos **users_profile** se encuentre creada
 
 ![assets/44.png](assets/44.png)
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 15 Explorando el dashboard de administración
 
@@ -1982,6 +2032,10 @@ class ProfileAdmin(admin.ModelAdmin):
 ```
 
 ![assets/56.png](assets/56.png)
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 16 Dashboard de Administración
 
@@ -2194,6 +2248,10 @@ admin.site.register(User, UserAdmin)
 
 ![assets/65.png](assets/65.png)
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Clase 17 Creación del modelo de posts
 
 Para reflejar los cambios en la base de datos, siempre que se crea o se edita un modelo debemos cancelar el server, ejecutar makemigrations, migrate y luego de nuevo volver a correr el servidor con runserver.
@@ -2281,6 +2339,10 @@ ahora al seleccionar nuevamente una imagen se va a almacenar en **/media/users/p
 **Reto de la clase:**
 
 Crea el modelo de posts y regístralo en el admin.
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 18 Templates y archivos estáticos
 
@@ -2484,6 +2546,10 @@ MEDIA_URL = '/media/'
 Terminando de configurar el folder static verificar que el servidor este corriendo de manera correcta, apagarlo y nuevamente prenderlo para aplicar cambios y despues recargar la pagina http://127.0.0.1:8000/posts/, se debe ver la presentacion de la siguiente forma, faltando algunas cosas por corregir.
 
 ![assets/70.png](assets/70.png)
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 19 Login
 
@@ -2745,6 +2811,10 @@ LOGIN_URL = '/users/login/'
 
 de esta forma no se tendra acceso directo a posts sin antes estar autenticado desde una pestaña de incognito y la va a redirigir a login, tener en cuenta que si quiere probar sin estar en incognito se debe borrar la cache del navegador para que no guarde al usuario
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Clase 20 Logout
 
 Completaremos el flujo de autenticación del usuario que iniciamos en la clase anterior agregando la funcionalidad de Logout. Ademas incorporamos algo de estilos al formulario de Login.
@@ -2851,6 +2921,10 @@ despues de guardar este cambio nuevamente hacer click sobre el icono
 y de esta forma va a redirigir a login
 
 ![assets/73.png](assets/73.png)
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 21 Signup
 
@@ -3094,6 +3168,10 @@ Nuevamente intentar crear un usuario que ya exista en base de datos y de esta fo
 
 ![assets/83.png](assets/83.png)
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Clase 22 Middlewares
 
 Un middleware en Django es una serie de hooks y una API de bajo nivel que nos permiten modificar el objeto request antes de que llegue a la vista y response antes de que salga de la vista, la definicion de Middlewares se puede encontrar en la [documentacion](https://docs.djangoproject.com/en/3.1/topics/http/middleware/)
@@ -3210,6 +3288,10 @@ MIDDLEWARE = [
 Despues de realizar esto si se loguea con un usuario que no tenga imagen o biografia solamente se va a redirigir a http://127.0.0.1:8000/users/me/profile/ y solamente se podra hacer logout.
 
 ![assets/85.png](assets/85.png)
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 23 Formularios en Django
 
@@ -3549,6 +3631,10 @@ y de esta forma ya se pueden ver todos los cambios reflejados en el perfil
 
 ![assets/98.png](assets/98.png)
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Clase 24 Mostrando el form en el template
 
 Existen diferentes formas en las que se pueden mostrar los valores del form, estas son: as_table, as_p y as_ul. También se pueden mostrar campos de manera individual, incluso customizar las clases que se van a usar para mostrar los errores, etc. Refinaremos la apariencia del form a través de algunas refactorizaciones en el template.
@@ -3684,6 +3770,10 @@ Ahora falta aplicarlo a los otros capos que son biography, phone_number y pictur
 De tal manera que al introducir o faltar algun campo en el navegador, se va indicar que errores son los que se estan teniendo 
 
 ![assets/101.png](assets/101.png)
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 25 Model forms
 
@@ -4044,6 +4134,10 @@ y de esta forma ya queda cargado
 
 ![assets/109.png](assets/109.png)
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Clase 26 Validación de formularios
 
 Falta crear el link en **Login** para redirigir hacia **Sign up** y crear cualquier usuario.
@@ -4245,6 +4339,10 @@ Si se crea un nuevo usuario este va a cargar automaticamente en la base de datos
 ![assets/115.png](assets/115.png)
 
 ![assets/116.png](assets/116.png)
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 27 Class-based views
 
@@ -4480,6 +4578,10 @@ Ahora crear el template **detail.html** en **Platzigram/templates/users/detail.h
 por ultimo se puede probar que el template este cargando , estableciendo cualquier ruta en users como http://localhost:8000/users/hola/
 
 ![assets/119.png](assets/119.png)
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 28 Protegiendo la vista de perfil, Detail View y List View
 
@@ -4984,6 +5086,10 @@ nuevamente comprobar que los posts esten cargando en el navegador
 ![assets/136.png](assets/136.png)
 
 **Reto:** Hacer el detalle de los posts con DetailView
+
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ## Clase 29 CreateView, FormView y UpdateView
 
@@ -5610,6 +5716,10 @@ urlpatterns = [
 ]
 ```
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
+
 ## Clase 30 Generic auth views
 
 Django cuenta con varias vistas genéricas basadas en clases para resolver muchas de las funcionalidades relacionadas con la autenticación, como es el caso de:
@@ -5867,6 +5977,9 @@ Ahora hacer la prueba en el navegador haciendo login y logout
 
 De esta forma queda lista la aplicacion **[PLatzigram](https://platzigramjcc.herokuapp.com)**
 
+<div align="right">
+  <small><a href="#tabla-de-contenido">🡡 volver al inicio</a></small>
+</div>
 
 ___
 
