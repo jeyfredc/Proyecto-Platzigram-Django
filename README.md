@@ -5983,9 +5983,8 @@ De esta forma queda lista la aplicacion **[PLatzigram](https://platzigramjcc.her
 
 ___
 
-# Portafolio
+## ¿Quieres conocer mas proyectos?
+
+Puedes visualizar mi portafolio en el siguiente enlace https://jeyfredc.github.io/Portafolio/
 
 ![assets/img-portafolio.png](assets/img-portafolio.png)
-
-Aqui puedes visualizar mi portafolio creado con HTML, CSS y JS, contiene varios proyectos realizados en diferentes lenguajes de programación
-https://jeyfredc.github.io/Portafolio/Css-Portafolio/
